@@ -2,7 +2,7 @@
 
 When we start a machine learning project, the first mandatory question is where we get data from and how the data is prepared. Only when this stage has been completed, does we can go to the training stage. In this tutorial, we first introduce you how to use and prepare the [Stanford Dogs Dataset](http://vision.stanford.edu/aditya86/ImageNetDogs/) [1][2]; then we show the 5 core steps to implement a neural network for training in Tensorflow.
 
-<!-- ## Table of contents
+## Table of contents
 
 1. [Requirements for the readers](#requirements-for-the-readers)
 2. [Prepare the Stanford Dogs dataset](#prepare-the-stanford-dogs-dataset)
@@ -10,7 +10,7 @@ When we start a machine learning project, the first mandatory question is where 
 4. [Results](#results)
 5. [Running the codes](#running-the-codes)
 6. [Conclusion](#conclusion)
-7. [References](#references) -->
+7. [References](#references)
 
 ## Requirements for the readers
 
