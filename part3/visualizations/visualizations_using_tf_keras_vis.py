@@ -36,10 +36,7 @@ def plot_activation_maximization_of_a_layer(model, layer_index):
                             optimizer=tf.keras.optimizers.Adam(1.0, 0.999),
                             callbacks=[Progress()])
 
-    ## Since v0.6.0, calling `astype()` is NOT necessary.
-    # activations = activations[0].astype(np.uint8)
-
-    # Render
+    # Plot
     # print('[*] activations: ', activations)
     print('[*] activations.shape: ', activations.shape)
     plt.imshow(activations[0])
@@ -57,7 +54,7 @@ def plot_vanilla_saliency_of_a_model(model, X, image_titles):
     # Generate saliency map
     saliency_map = saliency(score, X)
 
-    # Render
+    # Plot
     f, ax = plt.subplots(nrows=1, ncols=3, figsize=(12, 4))
     for i, title in enumerate(image_titles):
         ax[i].set_title(title, fontsize=16)
@@ -80,7 +77,7 @@ def plot_smoothgrad_of_a_model(model, X, image_titles):
                             smooth_samples=20, # The number of calculating gradients iterations
                             smooth_noise=0.20) # noise spread level
 
-    # Render
+    # plot
     f, ax = plt.subplots(nrows=1, ncols=3, figsize=(12, 4))
     for i, title in enumerate(image_titles):
         ax[i].set_title(title, fontsize=16)
@@ -102,7 +99,7 @@ def plot_gradcam_of_a_model(model, X, image_titles, images):
                   X,
                   penultimate_layer=-1)
 
-    # Render
+    # Plot
     f, ax = plt.subplots(nrows=1, ncols=3, figsize=(12, 4))
     for i, title in enumerate(image_titles):
         heatmap = np.uint8(cm.jet(cam[i])[..., :3] * 255)
@@ -125,7 +122,7 @@ def plot_gradcam_plusplus_of_a_model(model, X, image_titles, images):
                   X,
                   penultimate_layer=-1)
 
-    # Render
+    # Plot
     f, ax = plt.subplots(nrows=1, ncols=3, figsize=(12, 4))
     for i, title in enumerate(image_titles):
         heatmap = np.uint8(cm.jet(cam[i])[..., :3] * 255)
@@ -144,10 +141,7 @@ def plot_scorecam_of_a_model(model, X, image_titles, images):
     # Generate heatmap with ScoreCAM
     cam = scorecam(score, X, penultimate_layer=-1)
 
-    ## Since v0.6.0, calling `normalize()` is NOT necessary.
-    # cam = normalize(cam)
-
-    # Render
+    # Plot
     f, ax = plt.subplots(nrows=1, ncols=3, figsize=(12, 4))
     for i, title in enumerate(image_titles):
         heatmap = np.uint8(cm.jet(cam[i])[..., :3] * 255)
@@ -169,10 +163,7 @@ def plot_faster_scorecam_of_a_model(model, X, image_titles, images):
                 penultimate_layer=-1,
                 max_N=8)
 
-    ## Since v0.6.0, calling `normalize()` is NOT necessary.
-    # cam = normalize(cam)
-
-    # Render
+    # Plot
     f, ax = plt.subplots(nrows=1, ncols=3, figsize=(12, 4))
     for i, title in enumerate(image_titles):
         heatmap = np.uint8(cm.jet(cam[i])[..., :3] * 255)

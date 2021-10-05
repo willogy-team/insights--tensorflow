@@ -8,15 +8,15 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 import matplotlib.pyplot as plt
 
-from visualizations.manual_plot_by_matplotlib import plot_filters_of_a_layer
-from visualizations.manual_plot_by_matplotlib import plot_feature_maps_of_a_layer, plot_feature_maps_of_multiple_layers
-from visualizations.automatic_plot_by_tf_keras_vis import plot_activation_maximization_of_a_layer
-from visualizations.automatic_plot_by_tf_keras_vis import plot_vanilla_saliency_of_a_model
-from visualizations.automatic_plot_by_tf_keras_vis import plot_smoothgrad_of_a_model
-from visualizations.automatic_plot_by_tf_keras_vis import plot_gradcam_of_a_model
-from visualizations.automatic_plot_by_tf_keras_vis import plot_gradcam_plusplus_of_a_model
-from visualizations.automatic_plot_by_tf_keras_vis import plot_scorecam_of_a_model
-from visualizations.automatic_plot_by_tf_keras_vis import plot_faster_scorecam_of_a_model
+from visualizations.visualizations_using_filters_and_featuremaps import plot_filters_of_a_layer
+from visualizations.visualizations_using_filters_and_featuremaps import plot_feature_maps_of_a_layer, plot_feature_maps_of_multiple_layers
+from visualizations.visualizations_using_tf_keras_vis import plot_activation_maximization_of_a_layer
+from visualizations.visualizations_using_tf_keras_vis import plot_vanilla_saliency_of_a_model
+from visualizations.visualizations_using_tf_keras_vis import plot_smoothgrad_of_a_model
+from visualizations.visualizations_using_tf_keras_vis import plot_gradcam_of_a_model
+from visualizations.visualizations_using_tf_keras_vis import plot_gradcam_plusplus_of_a_model
+from visualizations.visualizations_using_tf_keras_vis import plot_scorecam_of_a_model
+from visualizations.visualizations_using_tf_keras_vis import plot_faster_scorecam_of_a_model
 
 
 def create_model():
@@ -50,7 +50,7 @@ for idx, layer in enumerate(model.layers):
     print('[**] layer.output.shape: {}'.format(layer.output.shape))
     filters_max, filters_min = filters_weights.max(), filters_weights.min()
     filters_weights = (filters_weights - filters_min)/(filters_max - filters_min)
-    # print('[**] filters_weights: ', filters_weights)
+    print('[**] filters_weights: ', filters_weights)
 
     plot_filters_of_a_layer(filters_weights, 3)
 
