@@ -1,10 +1,12 @@
 # Tensorflow insights - part 3: Visualizations
 
+Deep learning is often thought of as a black-box function. Though cannot fully understand what a deep network does to give a prediction, we still have some visualization techniques to obtain information about what factors affect its prediction.
+
 ## Load model checkpoint
 
-Let's first create a  ```test.py``` file to load model from model checkpoint.
+Let's first create a  ```test.py``` file to load the model from the model checkpoint.
 
-First create a function named ```create_model``` to define the network architecture. This network architecture must be the same as that in ```train.py```
+First, create a function named ```create_model``` to define the network architecture. This network architecture must be the same as that in ```train.py```
 
 ```python
 def create_model():
@@ -34,7 +36,7 @@ model.load_weights(checkpoint_path)
 
 ## Visualizing filters of convolutional layers [1]
 
-A filter is a collection of weights that are learned by neural network by training on data. The filter of a convolutional layer has a 2d structure, so we can visualize it as an image to get an insights of what information is learned.
+A filter is a collection of weights that are learned by the neural network by training on data. The filter of a convolutional layer has a 2d structure, so we can visualize it as an image to get an insight into what information is learned.
 
 Before that, from the ```model``` variable, we need to take out the convolutional layers, all the other layers are not included.
 
@@ -59,7 +61,7 @@ for idx, layer in enumerate(model.layers):
     print('[**] id: {}, layer.name: {}, filters_weights.shape: {}, biases_weights.shape: {}'.format(idx, layer.name, filters_weights.shape, biases_weights.shape))
 ```
 
-**Note:** We have already known the shape of each filter in a convolutional layer because we ourselves defined the filter sizes in ```train.py```. However, let's assume that we use a new network model and know nothing about it layers and filters.
+**Note:** We have already known the shape of each filter in a convolutional layer because we ourselves defined the filter sizes in ```train.py```. However, let's assume that we use a new network model and know nothing about its layers and filters.
 
 <p align=center>
     <img src="images/1_filtershape.JPG" width="480" alt>
@@ -70,7 +72,7 @@ for idx, layer in enumerate(model.layers):
 
 The shape of a filter will have 4 elements ```(height, width, the depth of the input, the number of filters)```. Each filter will have a depth equal to the depth of its input. For example, in the first input layer, the input image has 3 channels, so each filter of the first convolutional layer will also have 3 channels. We can visualize these 3 channels separately, or concatenate them to visualize as an RGB image.
 
-Try printing ```filters_weights``` of a layer by the code below (add that line inside the loop above), you can see that it has both positive and negative values. They are small and closed to zero. To visualize them on image, we have to get rid of the negative values by normalize to the range 0-1.
+Try printing ```filters_weights``` of a layer by the code below (add that line inside the loop above), you can see that it has both positive and negative values. They are small and closed to zero. To visualize them on an image, we have to get rid of the negative values by normalizing them to the range 0-1.
 
 ```python
 	print('[**] filters_weights: ', filters_weights)
@@ -83,7 +85,7 @@ Try printing ```filters_weights``` of a layer by the code below (add that line i
     <em><b>Figure 2:</b> The filter values/weights before normalization</em>
 </p>
 
- To visualize them on image, we have to get rid of the negative values by normalizing these values to the range 0-1. For normalization, we add these 2 lines right before the printing line of ```filter_weights``` above.
+ To visualize them on an image, we have to get rid of the negative values by normalizing these values to the range 0-1. For normalization, we add these 2 lines right before the printing line of ```filter_weights``` above.
 
 ```python
 	filters_max, filters_min = filters_weights.max(), filters_weights.min()
@@ -126,7 +128,7 @@ def plot_filters_of_a_layer(filters_weights, num_filters):
     plt.show()
 ```
 
-- In ```test.py```, call the visualization function ```plot_filters_of_a_layer```. Call the function inside the loop above to visualize filters of each layer.
+- In ```test.py```, call the visualization function ```plot_filters_of_a_layer```. Call the function inside the loop above to visualize the filters of each layer.
 
 ```python
 for idx, layer in enumerate(model.layers):
@@ -214,7 +216,7 @@ Running the code will display information like below.
     <em><b>Figure 8:</b> The output shapes of 3 convolutional layers are (None, 122, 122, 8), (None, 118, 118, 8) and (None, 116, 116, 8), respectively.</em>
 </p>
 
-In ```visualizations/visualizations_using_filters_and_featuremaps.py```, add a function ```plot_feature_maps_of_a_layer``` for visualizing feature maps of a layer. It receives the feature maps of a layer as input. For more information, the feature maps are the output of each layer. As in Figure 8, each convolutional filter has 8 feature maps (the last dimension). In this function, we visualize all the 8 feature maps.
+In ```visualizations/visualizations_using_filters_and_featuremaps.py```, add a function ```plot_feature_maps_of_a_layer``` for visualizing feature maps of a layer. It receives the feature maps of a layer as input. For more information, the feature maps are the output of each layer. As in Figure 8, each convolutional filter has 8 feature maps (the last dimension). In this function, we visualize all 8 feature maps.
 
 ```python
 def plot_feature_maps_of_a_layer(feature_maps):
@@ -232,7 +234,7 @@ def plot_feature_maps_of_a_layer(feature_maps):
 
 Come back to the file ```test.py```, we will try using the function above.
 
-First, we need to load the image and do some preprocessing steps including convert to numpy array, expand dimension for feeding into the network and scale the pixel value to the range [0, 1].
+First, we need to load the image and do some preprocessing steps including converting to numpy array, expanding dimension for feeding into the network, and scaling the pixel value to the range [0, 1].
 
 ```python
 # A PIL object
@@ -259,8 +261,8 @@ plot_feature_maps_of_a_layer(feature_maps_1)
 ```
 
 <ins>Some notes</ins>
-- The input image need to be preprocessed like the same in the training stage.
-- You can see the shape of the dog in all the feature maps, except that some just contains edge information and some are the gray scale with focus on patterns like furs, eyes, noses,...
+- The input image needs to be preprocessed like the same in the training stage.
+- You can see the shape of the dog in all the feature maps, except that some just contain edge information and some are grayscale with a focus on patterns like furs, eyes, noses,...
 - Surprisingly, from the first layer we can see that CNN can detect edges like predefined filters of edge detector.
 
 <p align=center>
@@ -272,11 +274,11 @@ plot_feature_maps_of_a_layer(feature_maps_1)
 
 ### Output feature maps from multiple layers
 
-Before visualizing, we need to know the idx of all convolutional layers. Luckily, we have known that they are 0, 1, 2.
+Before visualizing, we need to know the indices of all convolutional layers. Luckily, we have known that they are 0, 1, 2.
 
 The numbers of feature map channels in all the 3 convolutional layers are equal (which is 8), so we don't need to modify the function ```plot_feature_maps_of_a_layer```.
 
-Write a new function ```plot_feature_maps_of_multiple_layers``` that call the function ```plot_feature_maps_of_a_layer``` multiple times to plot feature maps of different layers. Each layer has a seperate plot.
+Write a new function ```plot_feature_maps_of_multiple_layers``` that call the function ```plot_feature_maps_of_a_layer``` multiple times to plot feature maps of different layers. Each layer has a separate plot.
 
 ```python
 def plot_feature_maps_of_multiple_layers(feature_maps):
@@ -320,8 +322,8 @@ Run the code and below are the 3 feature map images of 3 layers.
 
 <ins>Some notes</ins>
 
-- The feature maps of the third convolutional layer contain only edge information. It seems this is not a good enough semantic remaining features for recognizing a dog. Because from these edges, one can perceive them as many things, not just a dog.
-- We can also perceive that all the feature maps of 3 layers still represents the shape of the dog (even though just edges, or some parts of the dog (fur, nose, eyes)). If there are more layers, the deeper layers will not contain the information of a dog, but something more abstract will be represented, something that is high-level feature that is good for recognition.
+- The feature maps of the third convolutional layer contain only edge information. It seems this is not a good enough semantic remaining feature for recognizing a dog. Because from these edges, one can perceive them as many things, not just a dog.
+- We can also perceive that all the feature maps of 3 layers still represent the shape of the dog (even though just edges, or some parts of the dog (fur, nose, eyes)). If there are more layers, the deeper layers will not contain the information of a dog, but something more abstract will be represented, something that is a high-level feature that is good for recognition.
 
 ## tf.keras.vis [3]
 
@@ -342,7 +344,7 @@ Use ```pip install tf-keras-vis``` to install ```tf-keras-vis``` to your virtual
 
 In the subfolder ```visualizations```, let's create a new file named ```visualizations_using_tf_keras_vis.py``` for storing visualization functions that use ```tf.keras.vis```.
 
-First, we need to import required libraries in this file.
+First, we need to import the required libraries in this file.
 
 ```python
 import numpy as np
@@ -366,7 +368,7 @@ from tf_keras_vis.utils.scores import CategoricalScore
 
 A significant difference of ```tf-keras-vis``` visualizations from visualizing filters and feature maps is that they need the whole learned model, not just information in one layer. Only when it is necessary to extract a layer, does it have its own method for doing that.
 
-Activation Maximization is used to show what features the model choose to classify an object. For more information, you should visit this [page](https://distill.pub/2017/feature-visualization/).
+Activation Maximization is used to show what features the model chooses to classify an object. For more information, you should visit this [page](https://distill.pub/2017/feature-visualization/).
 
 The function for Activation Maximization visualization receives 2 arguments: ```model``` is the learned model, ```layer_index``` is the index of the layer that we want to visualize.
 
@@ -428,7 +430,7 @@ plot_activation_maximization_of_a_layer(model, 2)
     <em><b>Figure 15:</b> Activation maximization image of the VGG network on the elephant image (Image from [2]).</em>
 </p>
 
-You can see that our ActivationMaximization visualization (Figure 13) does not have good textures as that of [2] (Figure 15). One reason for this is our network is shallow so it cannot capture the good information from the image. The Figure 15 shows that tusk, large eyes and trunk are the cues for recognizing an elephant.
+You can see that our ActivationMaximization visualization (Figure 13) does not have good textures like that of [2] (Figure 15). One reason for this is our network is shallow so it cannot capture good information from the image. Figure 15 shows that tusk, large eyes, and trunk are the cues for recognizing an elephant.
 
 ### b) Vanilla Saliency visualization
 
@@ -515,9 +517,9 @@ plot_vanilla_saliency_of_a_model(model, X, image_titles)
     <em><b>Figure 19:</b> The vanilla saliency visualization from the web [3].</em>
 </p>
 
-In Figure 19 (from web [3]), you can see that for the last 2 images there are bright points on the regions having bear and rifle while in the goldfish image the bright points are sparse and scatter around the regions that do not have fish.
+In Figure 19 (from the web [3]), you can see that for the last 2 images there are bright points on the regions having bear and rifle while in the goldfish image the bright points are sparse and scatter around the regions that do not have fish.
 
-In Figure 18, the 2 saliency images of "Chihuahua" and "Maltese dog" almost capture no useful information to recognize a dog. Actually, the bright regions are mostly on the background. The saliency image of "Japanese spaniel" is more correct as the bright points gather on the face of the dog.
+In Figure 18, the 2 saliency images of "Chihuahua" and "Maltese dog" almost capture no useful information to recognize a dog. Actually, the bright regions are mostly in the background. The saliency image of the "Japanese spaniel" is more correct as the bright points gather on the face of the dog.
 
 ### c) SmoothGrad visualization
 
@@ -572,9 +574,9 @@ plot_smoothgrad_of_a_model(model, X, image_titles)
     <em><b>Figure 21:</b> The SmoothGrad visualization from the web [3].</em>
 </p>
 
-In Figure 21 (from web [3]), you can see that all the 3 objects are now obviously visible. 
+In Figure 21 (from the web [3]), you can see that all the 3 objects are now obviously visible. 
 
-In Figure 20, the 2 saliency images of "Chihuahua" and "Maltese dog" even have more noises than before. On the other hand, the saliency image of "Japanese spaniel" becomes clearer in the face region of the dog.
+In Figure 20, the 2 saliency images of "Chihuahua" and "Maltese dog" even have more noises than before. On the other hand, the saliency image of the "Japanese spaniel" becomes clearer in the face region of the dog.
 
 ### d) GradCam visualization
 
@@ -633,7 +635,7 @@ plot_gradcam_of_a_model(model, X, image_titles, images)
     <em><b>Figure 23:</b> The GradCam visualization from the web [3].</em>
 </p>
 
-You definitely recognize the heavy difference of heatmaps in Figure 22 and Figure 23. Heatmaps in Figure 23 are large and dense, while those in Figure 22 are small and sparse. This is likely because the fine-grained property of the Stanford Dogs dataset. Unlike objects in Figure 23 which are completely different from each other, all the objects in the Stanford Dogs dataset are dogs with just difference in breed. It will be harder to recognize them. And partly because our current model is too shallow. Look! The Maltese dog image contains many noises.
+You definitely recognize the heavy difference between heatmaps in Figure 22 and Figure 23. Heatmaps in Figure 23 are large and dense, while those in Figure 22 are small and sparse. This is likely because of the fine-grained property of the Stanford Dogs dataset. Unlike objects in Figure 23 which are completely different from each other, all the objects in the Stanford Dogs dataset are dogs with just differences in the breed. It will be harder to recognize them. And partly because our current model is too shallow. Look! The Maltese dog image contains many noises.
 
 ### e) GradCam++ visualization
 
@@ -687,11 +689,11 @@ plot_gradcam_plusplus_of_a_model(model, X, image_titles, images)
     <em><b>Figure 25:</b> The GradCam++ visualization from the web [3].</em>
 </p>
 
-Now, the noises in the right side of the Maltese dog image have disappeared and the other two images also have fewer noises. More surprisingly, the heatmaps at this time have shown a sign of classification. Although they are smaller and sparser than in Figure 25, we can now have a good explanation for this problem. That is to recognize different dog breeds, detecting the whole shape of a dog should not be a good cue, but focusing on the details seems to be a better thing. 
+Now, the noises on the right side of the Maltese dog image have disappeared and the other two images also have fewer noises. More surprisingly, the heatmaps at this time have shown a sign of classification. Although they are smaller and sparser than in Figure 25, we can now have a good explanation for this problem. That is to recognize different dog breeds, detecting the whole shape of a dog should not be a good cue, but focusing on the details seems to be a better thing. 
 
-Having looked the 3 images of 3 different dog breeds, you might have recognized the specialty of the heatmap locations:
-- "Chihuahua": On its head, there is a long heatmap which stays right on the white fur line of the dog.
-- "Japanese spaniel": Unlike the Chihuahua, Japanese spaniel has an inverted triangle on its head. There is a strong heatmap on the left side and a weak heatmap on the right side of the triangle. There are also some heatmaps near the mouth. 
+Having looked at the 3 images of 3 different dog breeds, you might have recognized the specialty of the heatmap locations:
+- "Chihuahua": On its head, there is a long heatmap that stays right on the white fur line of the dog.
+- "Japanese spaniel": Unlike the Chihuahua, the Japanese spaniel has an inverted triangle on its head. There is a strong heatmap on the left side and a weak heatmap on the right side of the triangle. There are also some heatmaps near the mouth. 
 - "Maltese": there are 3 heatmaps near the eyes and noses, which is possibly the indication to recognize Maltese dog with the others.
 
 
@@ -775,7 +777,7 @@ def plot_faster_scorecam_of_a_model(model, X, image_titles, images):
     plt.show()
 ```
 
-There is one thing to notice is the ```max_N``` argument of the heatmap generation step. It is used to specify the max number of channels that are used to generate heatmaps. This argument must be greater than or equal 1 and lower than or equal the number of channels that the penultimate layer has.
+There is one thing to notice is the ```max_N``` argument of the heatmap generation step. It is used to specify the max number of channels that are used to generate heatmaps. This argument must be greater than or equal to 1 and lower than or equal to the number of channels that the penultimate layer has.
 
 Finally, in ```test.py```, import the function and call it.
 
@@ -791,11 +793,11 @@ plot_faster_scorecam_of_a_model(model, X, image_titles, images)
     <em><b>Figure 28:</b> The Faster ScoreCam visualization of 3 input images.</em>
 </p>
 
-The fact that our current network has only 3 convolutional layers and the Stanford Dogs dataset is for fine-grained classification makes it hard for the network to learn to classify different categories. Fine-grained classification, unlike standard classification where there are strong differences between categories, requires a neural network to truly perceive the very detail parts of each category to do the classification.
+The fact that our current network has only 3 convolutional layers and the Stanford Dogs dataset is for fine-grained classification makes it hard for the network to learn to classify different categories. Fine-grained classification, unlike standard classification where there are strong differences between categories, requires a neural network to truly perceive the very detailed parts of each category to do the classification.
 
 ## Conclusion
 
-In this post, we have pointed out some types of visualizations. Although several visualization techniques cannot reach their best states because the model has not been good enough, we can still have a few insights on how visualization can help us to understand more about deep neural network. 
+In this post, we have pointed out some types of visualizations. Although several visualization techniques cannot reach their best states because the model has not been good enough, we can still have a few insights on how visualization can help us to understand more about deep neural networks. 
 
 ## References
 
