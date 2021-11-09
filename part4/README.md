@@ -1,12 +1,32 @@
 # Tensorflow insights - part 4:
 
-Until now, our network just has 3 convolutional layers and 2 dense layers. When training with epochs=50, batch size=1, learning rate=1e-4 on the Stanford Dogs dataset, the validation accuracy is 0.6111111044883728 (the train accuracy is 0.66) and the validation loss is 0.927966296672821 (the train loss is 0.7911). The number of parameters is:
+Until now, our network just has 3 convolutional layers and 2 dense layers. When training with epochs=50, batch size=1, learning rate=1e-4 on the Stanford Dogs dataset, the validation accuracy is 61.1% and the validation loss is 0.928. The number of parameters is:
 
 ```sh
 Total params: 13,782,835
 Trainable params: 13,782,835
 Non-trainable params: 0
 ```
+
+## Table of contents
+
+1. [Increase the depth of the network](#increase-the-depth-of-the-network)
+2. [Implementation](#implementation)
+    1. [1/ In ```vgg.py```:](#)
+    2. [a) Class ```VGGBlock```:](#)
+    3. [b) Class ```VGG16Net```:](#)
+    4. [2/ In ```train.py```:](#)
+3. [Improvement 1: increase learning rate from 1e-4 to 1e-7](#improvement-1:-increase-learning-rate-from-1e---4-to-1e---7)
+4. [Improvement 2: increase train batch size from 1 to 8](#improvement-2:-increase-train-batch-size-from-1-to-8)
+5. [Improvement 3: decrease the network complexity 1, learning rate=1e-4, batch size=8](#improvement-3:-decrease-the-network-complexity-1,-learning-rate=1e---4,-batch-size=8)
+6. [Improvement 4: Decrease learning rate from 1e-4 to 1e-7](#improvement-4:-decrease-learning-rate-from-1e---4-to-1e---7)
+7. [Improvement 5: Increase learning rate from 1e-4 to 1e-3](#improvement-5:-increase-learning-rate-from-1e---4-to-1e---3)
+8. [Improvement 6: increase the filters of the convolutional layers back again, lr=1e-4, batch size=8, epochs=100](#improvement-6:-increase-the-filters-of-the-convolutional-layers-back-again,-lr=1e-4,-batch-size=8,-epochs=100)
+9. [Improvement 7: decrease conv_layers of self.block_3 to 1](#improvement-7:-decrease-conv_layers-of-self.block_3-to-1)
+10. [Improvement 8: decrease conv_layers of self.block_4 to 1](#improvement-8:-decrease-conv_layers-of-self.block_4-to-1)
+5. [Running the codes](#running-the-codes)
+6. [Conclusion](#conclusion)
+7. [References](#references)
 
 ## Increase the depth of the network
 
@@ -247,9 +267,9 @@ def call(self, input_tensor, training=False):
     return x
 ```
 
-### b/ Class ```VGG16Net```: easily define the architecture in paper [1].
+### b) Class ```VGG16Net```:
 
-Defining the VGG network architecture in the class ```VGG16Net``` is quite easier. You just need to carefully initialize and assess layer by layer.
+Defining the VGG network architecture [1] in the class ```VGG16Net``` is quite easier. You just need to carefully initialize and assess layer by layer.
 
 In ```__init__```, we construct the VGG16 network architecture according to the configuration D in Figure 1.
 
@@ -464,7 +484,7 @@ Great! Everything is okay now. However, the validation accuracy is too low (just
 [*] Best validation loss:  1.0986113548278809
 ```
 
-## Improvement 1: lr 1e-4 to 1e-7
+## Improvement 1: increase learning rate from 1e-4 to 1e-7
 
 Try decreasing the learning rate. The accuracy has increased to 45%.
 
@@ -499,7 +519,7 @@ This improvement seems not to bring any positive effects to the result. The vali
 
 Keep the batch size 8 and come to the next improvement.
 
-## Improvement 3: decrease the network complexity 1, lr=1e-4, batch size=8
+## Improvement 3: decrease the network complexity 1, learning rate=1e-4, batch size=8
 
 We decrease the network complexity by removing one convolutional layer from each block. To accomplish this, we just need to change the value of ```conv_layers``` in each block. Change ```conv_layers``` of block 1 and block 2 from 2 to 1. Change ```conv_layers``` of block 3, block 4, and block 5 from 3 to 2. The ```input_shape``` of the flatten layer is also changed according to the block 5. The number of units in each of the 3 dense layers is also decreased from 4096 to 496.
 
@@ -534,7 +554,7 @@ Try running ```train.sh``` again.
 
 You can see that the accuracy has increased a lot. This support our assumption that the previous architecture is too complex. Moreover, by using block, it is clearly that we can easily modify the network architecture with just several changes in the block arguments.
 
-## Improvement 4: lr=1e-7
+## Improvement 4: Decrease learning rate from 1e-4 to 1e-7
 
 Continue with the network in improvement 3, try decreasing the learning rate from 1e-4 to 1e-7 to see if it helps.
 
@@ -549,7 +569,7 @@ Continue with the network in improvement 3, try decreasing the learning rate fro
 
 Seems like decreasing lr is not a good way. Let's increase the learning rate.
 
-## Improvement 5: lr=1e-3
+## Improvement 5: Increase learning rate from 1e-4 to 1e-3
 
 Continue with the network in improvement 3, try increasing the learning rate from 1e-4 to 1e-3 to see if it helps.
 
@@ -661,6 +681,63 @@ And this is the tensorboard after improvement 8.
 </p>
 
 During 100 epochs, both the train accuracy and test accuracy has a trend of increase. For the loss function, the distance between the two curves is greater than that of the accuracy.
+
+## Running the codes
+
+It is recommended that you read all the contents of this README before running the code.
+
+- Step 0: Install required packages in your virtual environment:
+
+```sh
+pip install -r requirements
+```
+
+- Step 1: In the file ```train.sh``` is the command that is used for training. The command is like below. You need to change its arguments:
+
+  - ```-trd```: the absolute path to the created train folder which is set in the part 1 of this series.
+  - ```-td```: the absolute path to the created test folder of "Step 2" which is set in the part 1 of this series.
+  - ```-mpd```: the path to the folder for saving checkpoints.
+  - ```-imp```: the path to the folder for saving the image of model plot.
+
+```sh
+python train.py \
+-trd "/media/data-huy/dataset/StanfordDogs/train_val_test/train" \
+-td "/media/data-huy/dataset/StanfordDogs/train_val_test/test" \
+-mdp "./models" \
+-imp "./images"
+```
+
+- Step 2: Train the neural network on the Stanford Dogs dataset:
+
+```sh
+chmod +x train.sh
+./train.sh
+```
+
+- Step 3: View Tensorboard
+
+```sh
+tensorboard --logdir="./logs"
+```
+
+- Step 4: For loading the trained model and do some visualizations, the ```test.py``` is used. We also have a script file ```test.sh``` for storing the command that runs ```test.py```. You need to change its arguments:
+  - ```-trd```: the absolute path to the created train folder which is set in the part 1 of this series. We will use images in the train set for visualizations.
+  - ```-mpd```: the path to the folder that stores saving checkpoints. We will load the trained model from this folder.
+
+```sh
+python test.py \
+-trd "/media/data-huy/dataset/StanfordDogs/train_val_test/train" \
+-mdp "./models" \
+```
+
+- Step 5: Test the trained model by visualizations.
+
+```sh
+chmod +x test.sh
+./test.sh
+```
+
+The visualization figures will be displayed one after another. To go to the next figure, click the "close" button of the current figure.
 
 ## Conclusion
 

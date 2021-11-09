@@ -19,6 +19,11 @@ from visualizations.visualizations_using_tf_keras_vis import plot_scorecam_of_a_
 from visualizations.visualizations_using_tf_keras_vis import plot_faster_scorecam_of_a_model
 
 
+ap = argparse.ArgumentParser()
+ap.add_argument("-trd", "--train_dir", required=True, help="Path to dataset train directory")
+ap.add_argument("-mdp", "--model_path", required=True, help="Path to the folder for saving checkpoints")
+args = vars(ap.parse_args())
+
 def create_model():
     model = tf.keras.Sequential([
         tf.keras.layers.Conv2D(8, 7, activation='relu'),
@@ -36,7 +41,7 @@ def create_model():
     return model
 
 model = create_model()
-checkpoint_path = './models/models'
+checkpoint_path = os.path.join(args["model_path"], 'models')
 model.load_weights(checkpoint_path)
 
 for idx, layer in enumerate(model.layers):
@@ -56,7 +61,7 @@ for idx, layer in enumerate(model.layers):
 
 # === Output feature maps from a single layer ===
 # A PIL object
-img = load_img('/media/data-huy/dataset/StanfordDogs/train_val_test/train/n02085620-Chihuahua/n02085620_1558.jpg', target_size=(128, 128))
+img = load_img(os.path.join(args["train_dir"], 'n02085620-Chihuahua', 'n02085620_1558.jpg'), target_size=(128, 128))
 # Convert to numpy array
 img = img_to_array(img)
 img = np.expand_dims(img, axis=0)
@@ -86,9 +91,9 @@ plot_activation_maximization_of_a_layer(model, 2)
 
 # === Attentions ===
 image_titles = ['Chihuahua', 'Japanese_spaniel', 'Maltese_dog']
-img1 = load_img('/media/data-huy/dataset/StanfordDogs/train_val_test/train/n02085620-Chihuahua/n02085620_1558.jpg', target_size=(128, 128))
-img2 = load_img('/media/data-huy/dataset/StanfordDogs/train_val_test/train/n02085782-Japanese_spaniel/n02085782_2874.jpg', target_size=(128, 128))
-img3 = load_img('/media/data-huy/dataset/StanfordDogs/train_val_test/train/n02085936-Maltese_dog/n02085936_4245.jpg', target_size=(128, 128))
+img1 = load_img(os.path.join(args["train_dir"], 'n02085620-Chihuahua', 'n02085620_1558.jpg'), target_size=(128, 128))
+img2 = load_img(os.path.join(args["train_dir"], 'n02085782-Japanese_spaniel', 'n02085782_2874.jpg'), target_size=(128, 128))
+img3 = load_img(os.path.join(args["train_dir"], 'n02085936-Maltese_dog', 'n02085936_4245.jpg'), target_size=(128, 128))
 img1 = np.asarray(img1)
 img2 = np.asarray(img2)
 img3 = np.asarray(img3)

@@ -2,6 +2,26 @@
 
 Deep learning is often thought of as a black-box function. Though cannot fully understand what a deep network does to give a prediction, we still have some visualization techniques to obtain information about what factors affect its prediction.
 
+## Table of contents
+
+1. [Load model checkpoint](#load-model-checkpoint)
+    1. [Load model checkpoint](#load-model-checkpoint)
+2. [Visualizing filters of convolutional layers](#visualizing-filters-of-convolutional-layers)
+3. [Visualizing feature maps of convolutional layers](#visualizing-feature-maps-of-convolutional-layers)
+    1. [Output feature maps from a single layer](#output-feature-maps-from-a-single-layer)
+    2. [Output feature maps from multiple layers](#output-feature-maps-from-multiple-layers)
+4. [tf.keras.vis](#tf.keras.vis)
+    1. [Activation maximization visualization](#activation-maximization-visualization)
+    2. [Vanilla Saliency visualization](#vanilla-saliency-visualization)
+    3. [SmoothGrad visualization](#smoothgrad-visualization)
+    4. [GradCam visualization](#gradcam-visualization)
+    5. [GradCam++ visualization](#gradcam++-visualization)
+    6. [ScoreCam visualization](#scorecam-visualization)
+    7. [Faster ScoreCam visualization](#faster-scorecam-visualization)
+5. [Running the codes](#running-the-codes)
+6. [Conclusion](#conclusion)
+7. [References](#references)
+
 ## Load model checkpoint
 
 Let's first create a  ```test.py``` file to load the model from the model checkpoint.
@@ -794,6 +814,63 @@ plot_faster_scorecam_of_a_model(model, X, image_titles, images)
 </p>
 
 The fact that our current network has only 3 convolutional layers and the Stanford Dogs dataset is for fine-grained classification makes it hard for the network to learn to classify different categories. Fine-grained classification, unlike standard classification where there are strong differences between categories, requires a neural network to truly perceive the very detailed parts of each category to do the classification.
+
+## Running the codes
+
+It is recommended that you read all the contents of this README before running the code.
+
+- Step 0: Install required packages in your virtual environment:
+
+```sh
+pip install -r requirements
+```
+
+- Step 1: In the file ```train.sh``` is the command that is used for training. The command is like below. You need to change its arguments:
+
+  - ```-trd```: the absolute path to the created train folder which is set in the part 1 of this series.
+  - ```-td```: the absolute path to the created test folder of "Step 2" which is set in the part 1 of this series.
+  - ```-mpd```: the path to the folder for saving checkpoints.
+  - ```-imp```: the path to the folder for saving the image of model plot.
+
+```sh
+python train.py \
+-trd "/media/data-huy/dataset/StanfordDogs/train_val_test/train" \
+-td "/media/data-huy/dataset/StanfordDogs/train_val_test/test" \
+-mdp "./models" \
+-imp "./images"
+```
+
+- Step 2: Train the neural network on the Stanford Dogs dataset:
+
+```sh
+chmod +x train.sh
+./train.sh
+```
+
+- Step 3: View Tensorboard
+
+```sh
+tensorboard --logdir="./logs"
+```
+
+- Step 4: For loading the trained model and do some visualizations, the ```test.py``` is used. We also have a script file ```test.sh``` for storing the command that runs ```test.py```. You need to change its arguments:
+  - ```-trd```: the absolute path to the created train folder which is set in the part 1 of this series. We will use images in the train set for visualizations.
+  - ```-mpd```: the path to the folder that stores saving checkpoints. We will load the trained model from this folder.
+
+```sh
+python test.py \
+-trd "/media/data-huy/dataset/StanfordDogs/train_val_test/train" \
+-mdp "./models" \
+```
+
+- Step 5: Test the trained model by visualizations.
+
+```sh
+chmod +x test.sh
+./test.sh
+```
+
+The visualization figures will be displayed one after another. To go to the next figure, click the "close" button of the current figure.
 
 ## Conclusion
 

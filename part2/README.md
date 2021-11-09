@@ -248,6 +248,12 @@ Try increasing the learning rate to 1e-4, the best validation accuracy does not 
 
 It is recommended that you read all the contents of this README before running the code.
 
+- Step 0: Install required packages in your virtual environment:
+
+```sh
+pip install -r requirements
+```
+
 - Step 1: In the file ```train.sh``` is the command that is used for training. The command is like below. You need to change its arguments:
 
   - ```-trd```: the absolute path to the created train folder which is set in the part 1 of this series.
