@@ -1,4 +1,4 @@
-# Tensorflow insights - part 4:
+# Tensorflow insights - part 4: Custom model
 
 Until now, our network just has 3 convolutional layers and 2 dense layers. When training with epochs=50, batch size=1, learning rate=1e-4 on the Stanford Dogs dataset, the validation accuracy is 61.1% and the validation loss is 0.928. The number of parameters is:
 
@@ -664,7 +664,10 @@ class VGG16Net(tf.keras.Model):
 ```
 
 ```sh
-36/38 [===========================>..] - ETA: 0s - loss: 0.1018 - accuracy: 0.9637/38 [============================>.] - ETA: 0s - loss: 0.0996 - accuracy: 0.9638/38 [==============================] - ETA: 0s - loss: 0.0976 - accuracy: 0.9638/38 [==============================] - 4s 106ms/step - loss: 0.0976 - accuracy: 0.9633 - val_loss: 1.2612 - val_accuracy: 0.7778
+36/38 [===========================>..] - ETA: 0s - loss: 0.1018 - accuracy: 0.96
+37/38 [============================>.] - ETA: 0s - loss: 0.0996 - accuracy: 0.96
+38/38 [==============================] - ETA: 0s - loss: 0.0976 - accuracy: 0.96
+38/38 [==============================] - 4s 106ms/step - loss: 0.0976 - accuracy: 0.9633 - val_loss: 1.2612 - val_accuracy: 0.7778
 [*] Best validation accuracy:  0.8333333134651184
 [*] Best validation loss:  0.716941237449646
 ```
