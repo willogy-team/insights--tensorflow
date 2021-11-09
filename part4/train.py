@@ -16,10 +16,17 @@ import matplotlib.pyplot as plt
 from networks.vgg import VGG16Net
 
 
+# To reproduce results
 print(tf.__version__)
 tf.random.set_seed(1234)
 np.random.seed(1234)
 random.seed(1234)
+os.environ['PYTHONHASHSEED'] = str(1234)
+os.environ['TF_CUDNN_DETERMINISTIC'] = '1'
+os.environ['TF_DETERMINISTIC_OPS'] = '1'
+
+# tf.config.threading.set_inter_op_parallelism_threads(1)
+# tf.config.threading.set_intra_op_parallelism_threads(1)
 
 
 ap = argparse.ArgumentParser()

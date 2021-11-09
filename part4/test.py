@@ -18,6 +18,8 @@ from visualizations.automatic_plot_by_tf_keras_vis import plot_gradcam_plusplus_
 from visualizations.automatic_plot_by_tf_keras_vis import plot_scorecam_of_a_model
 from visualizations.automatic_plot_by_tf_keras_vis import plot_faster_scorecam_of_a_model
 
+from networks.vgg import VGG16Net
+
 
 def create_model():
     model = tf.keras.Sequential([
