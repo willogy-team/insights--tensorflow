@@ -489,7 +489,10 @@ Great! Everything is okay now. However, the validation accuracy is too low (just
 Try decreasing the learning rate. The accuracy has increased to 45%.
 
 ```sh
-296/300 [============================>.] - ETA: 0s - loss: 1.0763 - accuracy: 0.298/300 [============================>.] - ETA: 0s - loss: 1.0758 - accuracy: 0.300/300 [==============================] - ETA: 0s - loss: 1.0756 - accuracy: 0.300/300 [==============================] - 20s 66ms/step - loss: 1.0756 - accuracy: 0.5167 - val_loss: 1.0850 - val_accuracy: 0.3889
+296/300 [============================>.] - ETA: 0s - loss: 1.0763 - accuracy: 0.
+298/300 [============================>.] - ETA: 0s - loss: 1.0758 - accuracy: 0.
+300/300 [==============================] - ETA: 0s - loss: 1.0756 - accuracy: 0.
+300/300 [==============================] - 20s 66ms/step - loss: 1.0756 - accuracy: 0.5167 - val_loss: 1.0850 - val_accuracy: 0.3889
 [*] Best validation accuracy:  0.4555555582046509
 [*] Best validation loss:  1.0849639177322388
 ```
@@ -744,7 +747,7 @@ The visualization figures will be displayed one after another. To go to the next
 
 ## Conclusion
 
-In this post, we have shown you what is a custom model (or custom layer), how to use it in Tensorflow, and see how it can bring us more efficiency when coding and experimenting with different variations of a network architecture. The results on the 3-class Stanford dataset have also become far better. In the next posts, we will continue with Tensorflow custom model to try using it to implement other popular network architecture.
+In this post, we have shown you what is a custom model (or custom layer), how to use it in Tensorflow, and see how it can bring us more efficiency when coding and experimenting with different variations of a network architecture. The results on the 3-class Stanford dataset have also become far better. In the next posts, we will continue with Tensorflow custom model to try using it to implement other popular network architectures.
 
 ## References
 
