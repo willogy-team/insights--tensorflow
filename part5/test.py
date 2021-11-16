@@ -26,6 +26,7 @@ ap.add_argument("-mdp", "--model_path", required=True, help="Path to the folder 
 args = vars(ap.parse_args())
 
 model = VGG16Net(num_classes=3)
+print('[*] type(model): ', type(model))
 input_shape = (None, 224, 224, 3)
 model.build(input_shape)
 # model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-4), metrics=['accuracy'])
@@ -66,14 +67,19 @@ img = img/255
 print('[*] model, type(model): ', model, type(model))
 print('[*] dir(model): ', dir(model))
 # print('[*] model.input: ', model.input)
+model.inputs = model.layers[0].input # !! VERY IMPORTANT
 print('[*] model.inputs: ', model.inputs)
+model.outputs = model.layers[-1].output # !! VERY IMPORTANT
+print('[*] model.outputs: ', model.outputs)
 # print('[*] model.input_shape: ', model.input_shape())
 print('[*] model.layers: ', model.layers)
 print('[*] model.layers[0]: ', model.layers[0])
 print('[*] dir(model.layers[0]): ', dir(model.layers[0]))
+print('[*] model.layers[0].input: ', model.layers[0].input)
 print('[*] model.layers[0].output: ', model.layers[0].output)
 x = tf.keras.layers.Input(shape=(224, 224, 3))
-model_1 = tf.keras.Model(inputs=model.layers[0].input, outputs=model.layers[0].output)
+# model_1 = tf.keras.Model(inputs=model.layers[0].input, outputs=model.layers[0].output)
+model_1 = tf.keras.Model(inputs=model.inputs, outputs=model.layers[0].output)
 feature_maps_1 = model_1.predict(img)
 print('[*] feature_maps_1.shape: ', feature_maps_1.shape)
     
@@ -95,6 +101,9 @@ plot_activation_maximization_of_a_layer(model, 2)
 # === GradCam++ from a single layer ===
 # plot_gradcam_plusplus_of_a_layer(model, 2)
     
+# model = tf.keras.Model(inputs=model.inputs, outputs=model.outputs)
+model = model.model()
+model.summary()
 # === Attentions ===
 image_titles = ['Chihuahua', 'Japanese_spaniel', 'Maltese_dog']
 img1 = load_img(os.path.join(args["train_dir"], 'n02085620-Chihuahua', 'n02085620_1558.jpg'), target_size=(128, 128))
@@ -109,7 +118,7 @@ X = images/255
     
 ## Vanilla saliency
 print('[*] Vanilla saliency')
-plot_vanilla_saliency_of_a_model(model, X, image_titles)
+# plot_vanilla_saliency_of_a_model(model, X, image_titles)
     
 ## SmoothGrad
 print('[*] SmoothGrad')

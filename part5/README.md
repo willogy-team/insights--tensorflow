@@ -279,7 +279,7 @@ Try running ```test.sh```, we see that it has succeeded in visualizing the featu
 Traceback (most recent call last):
   File "test.py", line 93, in <module>
     plot_activation_maximization_of_a_layer(model, 2)
-  File "/media/data-huy/Insights/part5/visualizations/automatic_plot_by_tf_keras_vis.py", line 23, in plot_activation_maximization_of_a_layer
+  File "/part5/visualizations/automatic_plot_by_tf_keras_vis.py", line 23, in plot_activation_maximization_of_a_layer
     ActivationMaximization(model,
 ...
 ValueError: Input tensors to a Functional must come from `tf.keras.Input`. Received: None (missing previous layer metadata).
@@ -293,12 +293,85 @@ ActivationMaximization(model,
                         clone=False)
 ```
 
-This method receives the ```model``` directly as input, hence we cannot do anything to help it to access the ```model.layers[0].input```. No difficulty, it looks like we need to turn back to the essence of the problem which is the ```None``` of the ```model.inputs```. We have to find a way to elucidate it.
+This method receives the ```model``` directly as input, hence we cannot do anything to help it to access the ```model.layers[0].input```. No difficulty, it looks like we need to turn back to the essence of the problem which is the ```None``` of the ```model.inputs```. We have to find a way to elucidate it. This is simple than we thought. We just simply assign the ```model.layers[0].input``` to ```model.inputs```:
+
+```python
+model.inputs = model.layers[0].input
+print('[*] model.inputs: ', model.inputs)
+model.outputs = model.layers[-1].output
+print('[*] model.outputs: ', model.outputs)
+```
+
+Now, try running ```test.sh``` again. The problem above has been solved, but again we have a new problem :).
+
+```sh
+Traceback (most recent call last):
+  File "test.py", line 120, in <module>
+    plot_vanilla_saliency_of_a_model(model, X, image_titles)
+  File "/part5/visualizations/automatic_plot_by_tf_keras_vis.py", line 53, in plot_vanilla_saliency_of_a_model
+    saliency = Saliency(model,
+...
+ValueError: Expected `model` argument to be a functional `Model` instance, but got a subclass model instead.
+```
+
+From now on, as being specified in part 3, the entire model is used for visualization. Therefore, we just need to directly use the variable ```model``` in ```test.py```. The problem above is again related to the library ```tf.keras.vis```. The error is that the library does not accept a subclass model, it needs a functional model.
+
+Similar as ```model.inputs```, we define ```model.outputs```:
+
+```python
+model.outputs = model.layers[-1].output
+```
+
+Now, let's create the functional model for the class ```VGG16Net``` right after the call of ```plot_activation_maximization_of_a_layer(model, 2)```. We should also call ```model.summary()``` to verify the created model:
+
+```python
+model = tf.keras.Model(inputs=model.inputs, outputs=model.outputs)
+model.summary()
+```
+
+**Note:** An alternative way to create the functional model is ```model.model()```.
+
+<p align=center>
+    <img src="images/4_model_summary_3.JPG" width="480" alt>
+</p>
+<p align=center>
+    <em><b>Figure 4:</b> The result of model.summary(). </em>
+</p>
+
+Yes, everything seems to be okay. Try running ```test.sh``` (Hope everything is okay too :')).
+
+```sh
+Traceback (most recent call last):
+  File "test.py", line 120, in <module>
+    plot_vanilla_saliency_of_a_model(model, X, image_titles)
+  File "/media/data-huy/Insights/part5/visualizations/automatic_plot_by_tf_keras_vis.py", line 53, in plot_vanilla_saliency_of_a_model
+    saliency = Saliency(model,
+  File "/home/aioz-huy/miniconda3/envs/learn_tensorflow/lib/python3.8/site-packages/tf_keras_vis/__init__.py", line 39, in __init__
+    self.model = tf.keras.models.clone_model(self.model)
+  File "/home/aioz-huy/miniconda3/envs/learn_tensorflow/lib/python3.8/site-packages/tensorflow/python/keras/models.py", line 428, in clone_model
+    return _clone_functional_model(
+  File "/home/aioz-huy/miniconda3/envs/learn_tensorflow/lib/python3.8/site-packages/tensorflow/python/keras/models.py", line 196, in _clone_functional_model
+    model_configs, created_layers = _clone_layers_and_model_config(
+  File "/home/aioz-huy/miniconda3/envs/learn_tensorflow/lib/python3.8/site-packages/tensorflow/python/keras/models.py", line 247, in _clone_layers_and_model_config
+    config = functional.get_network_config(
+  File "/home/aioz-huy/miniconda3/envs/learn_tensorflow/lib/python3.8/site-packages/tensorflow/python/keras/engine/functional.py", line 1278, in get_network_config
+    layer_config = serialize_layer_fn(layer)
+  File "/home/aioz-huy/miniconda3/envs/learn_tensorflow/lib/python3.8/site-packages/tensorflow/python/keras/models.py", line 244, in _copy_layer
+    created_layers[layer.name] = layer_fn(layer)
+  File "/home/aioz-huy/miniconda3/envs/learn_tensorflow/lib/python3.8/site-packages/tensorflow/python/keras/models.py", line 61, in _clone_layer
+    return layer.__class__.from_config(layer.get_config())
+  File "/home/aioz-huy/miniconda3/envs/learn_tensorflow/lib/python3.8/site-packages/tensorflow/python/keras/engine/training.py", line 2231, in get_config
+    raise NotImplementedError
+NotImplementedError
+```
+
+Nope, we continue to have error. It is even harder than the previous cases because the Traceback does not output clearly the cause of the error. There is a topic for this problem [link 1](https://stackoverflow.com/questions/51806852/cant-save-custom-subclassed-model), [link 2](https://stackoverflow.com/questions/58678836/notimplementederror-layers-with-arguments-in-init-must-override-get-conf).
 
 ## Check again the filters_weights.shape, biases_weights.shape
 
 ## Conclusion
 
+Many things have been overcome to complete this part.
 
 ## References
 
