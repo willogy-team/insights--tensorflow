@@ -236,6 +236,65 @@ Traceback (most recent call last):
 ValueError: Input tensors to a Functional must come from `tf.keras.Input`. Received: None (missing previous layer metadata)
 ```
 
+In the last post of part 4, because we use a Sequential model to reconstruct a network but here
+
+For some reasons, the ```model.inputs``` is None. It may be due to the use of custom model. So, we will define the input ourselves by using ```tf.keras.Input```:
+
+```python
+x = tf.keras.Input(shape=(224, 224, 3)) # The input shape is set to the same as in training stage
+model_1 = Model(inputs=x, outputs=model.layers[0].output) # Replace model.inputs with x
+```
+
+We also need to change the ```target_size``` of the loaded image from (128, 128) to (224, 224):
+
+```python
+# === Output feature maps from a single layer ===
+# A PIL object
+# img = load_img(os.path.join(args["train_dir"], 'n02085620-Chihuahua', 'n02085620_1558.jpg'), target_size=(128, 128)) # old
+img = load_img(os.path.join(args["train_dir"], 'n02085620-Chihuahua', 'n02085620_1558.jpg'), target_size=(224, 224)) # new
+```
+
+Then, run ```test.sh``` again.
+
+```sh
+Traceback (most recent call last):
+  File "test.py", line 73, in <module>
+    model_1 = Model(inputs=x, outputs=model.layers[0].output)
+...
+ValueError: Graph disconnected: cannot obtain value for tensor Tensor("input_1:0", shape=(None, 224, 224, 3), dtype=float32) at layer "vgg_block". The following previous layers were accessed without issue: []
+```
+
+Another error appears! As [3] points out, the ValueError above is because our model requires multiple inputs but we do not provide enough inputs. But why? Doesn't we only have one input that is an 3-channel image? Thinking again, this is because there must have been an input somewhere in the class ```VGG16Net```, but we have provide one more input which is the ```x``` - the ```tf.keras.Input```. Actually, the input layer is in the first block of the VGG network. To address it, we use ```model.layers[0].input```:
+
+```python
+# model_1 = tf.keras.Model(inputs=model.inputs, outputs=model.layers[0].output) # old
+model_1 = tf.keras.Model(inputs=model.layers[0].input, outputs=model.layers[0].output) # new
+# model_2 = Model(inputs=model.inputs, outputs=list_of_outputs) # old
+model_2 = Model(inputs=model.layers[0].input, outputs=list_of_outputs) # new
+```
+
+Try running ```test.sh```, we see that it has succeeded in visualizing the feature maps. Now comes a new error:
+
+```sh
+Traceback (most recent call last):
+  File "test.py", line 93, in <module>
+    plot_activation_maximization_of_a_layer(model, 2)
+  File "/media/data-huy/Insights/part5/visualizations/automatic_plot_by_tf_keras_vis.py", line 23, in plot_activation_maximization_of_a_layer
+    ActivationMaximization(model,
+...
+ValueError: Input tensors to a Functional must come from `tf.keras.Input`. Received: None (missing previous layer metadata).
+```
+ 
+It is practically the same error as above but this time it happens at a different line. It happens in the function ```plot_activation_maximization_of_a_layer()``` in the file ```automatic_plot_by_tf_keras_vis.py```. At this time, things are not easy as before because this function is related to the library ```tf_keras_vis```. The problem happens right when we call one of the methods of the library:
+
+```python
+ActivationMaximization(model,
+                        model_modifier=[ExtractIntermediateLayer(model.layers[layer_index].name)],
+                        clone=False)
+```
+
+This method receives the ```model``` directly as input, hence we cannot do anything to help it to access the ```model.layers[0].input```. No difficulty, it looks like we need to turn back to the essence of the problem which is the ```None``` of the ```model.inputs```. We have to find a way to elucidate it.
+
 ## Check again the filters_weights.shape, biases_weights.shape
 
 ## Conclusion
@@ -246,3 +305,5 @@ ValueError: Input tensors to a Functional must come from `tf.keras.Input`. Recei
 [1] https://github.com/tensorflow/tensorflow/issues/25036#issuecomment-504125711
 
 [2] https://github.com/tensorflow/tensorflow/issues/25036#issuecomment-542087377
+
+[3] https://github.com/keras-team/keras/issues/12532#issuecomment-519031142

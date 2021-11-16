@@ -28,6 +28,7 @@ args = vars(ap.parse_args())
 model = VGG16Net(num_classes=3)
 input_shape = (None, 224, 224, 3)
 model.build(input_shape)
+# model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-4), metrics=['accuracy'])
 # model.summary()
 model.model().summary()
 checkpoint_path = os.path.join(args["model_path"], 'models')
@@ -52,17 +53,27 @@ for idx, layer in enumerate(model.layers):
         # print('[**] filters_weights: ', filters_weights)
     print('[**] layer.output.shape: {}'.format(layer.output.shape))
 
-    plot_filters_of_a_layer(filters_weights, 3)
+    # plot_filters_of_a_layer(filters_weights, 3)
 
 # === Output feature maps from a single layer ===
 # A PIL object
-img = load_img(os.path.join(args["train_dir"], 'n02085620-Chihuahua', 'n02085620_1558.jpg'), target_size=(128, 128))
+img = load_img(os.path.join(args["train_dir"], 'n02085620-Chihuahua', 'n02085620_1558.jpg'), target_size=(224, 224))
 # Convert to numpy array
 img = img_to_array(img)
 img = np.expand_dims(img, axis=0)
 # img = model.preprocess_input(img)
 img = img/255
-model_1 = Model(inputs=model.inputs, outputs=model.layers[0].output)
+print('[*] model, type(model): ', model, type(model))
+print('[*] dir(model): ', dir(model))
+# print('[*] model.input: ', model.input)
+print('[*] model.inputs: ', model.inputs)
+# print('[*] model.input_shape: ', model.input_shape())
+print('[*] model.layers: ', model.layers)
+print('[*] model.layers[0]: ', model.layers[0])
+print('[*] dir(model.layers[0]): ', dir(model.layers[0]))
+print('[*] model.layers[0].output: ', model.layers[0].output)
+x = tf.keras.layers.Input(shape=(224, 224, 3))
+model_1 = tf.keras.Model(inputs=model.layers[0].input, outputs=model.layers[0].output)
 feature_maps_1 = model_1.predict(img)
 print('[*] feature_maps_1.shape: ', feature_maps_1.shape)
     
@@ -70,7 +81,7 @@ plot_feature_maps_of_a_layer(feature_maps_1)
     
 # === Output feature maps from multiple layers ===
 list_of_outputs = [model.layers[idx].output for idx in range(3)]
-model_2 = Model(inputs=model.inputs, outputs=list_of_outputs)
+model_2 = Model(inputs=model.layers[0].input, outputs=list_of_outputs)
 model_2.summary()
 feature_maps_2 = model_2.predict(img) 
 for feature_map in feature_maps_2:
