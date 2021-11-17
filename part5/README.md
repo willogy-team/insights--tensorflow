@@ -367,6 +367,85 @@ NotImplementedError
 
 Nope, we continue to have error. It is even harder than the previous cases because the Traceback does not output clearly the cause of the error. There is a topic for this problem [link 1](https://stackoverflow.com/questions/51806852/cant-save-custom-subclassed-model), [link 2](https://stackoverflow.com/questions/58678836/notimplementederror-layers-with-arguments-in-init-must-override-get-conf).
 
+Implement ```get_config()``` for 2 classes ```VGG16Net``` and ```VGGBlock```.
+
+For ```VGG16Net```:
+
+```python
+```
+
+For ```VGGBlock```:
+
+```python
+```
+
+Change the base class of ```VGGBlock``` to ```tf.keras.layers.Layer``` because ```tf.keras.Model``` does not have ```get_config()``` function to be overidden.
+
+In ```__init__```, add ```**kwargs``` and remove the argument ```name```:
+
+```python
+# def __init__(self, conv_layers=2, kernel_size=3, filters=64): # old
+#        super(VGGBlock, self).__init__(name='')
+def __init__(self, conv_layers=2, kernel_size=3, filters=64, **kwargs): # new
+    super(VGGBlock, self).__init__(**kwargs)
+```
+
+Try running ```test.sh``` and this is the error:
+
+```sh
+TypeError: ('Keyword argument not understood:', 'conv2d_3_64_a')
+```
+
+It looks like our ```get_config()``` cannot find the argument ```conv2d_```. Do you recognize the pattern name? That is the name of a convolutional layer in a VGG block according to our naming convention. We do not know exactly the reason, but there is a high chance that it is related to the underlying code of Tensorflow Keras. And it is hard to dig into the lower-level code, so it is better to get away from it. As far we have come here, we really have make the wrong complex choice at first (in part 4). We should not have used the ```exec``` or ```eval``` because it is unofficial way to declare variables in Python. No matter what have happened, the use of ```exec``` is a neat way to define many variants of a network architecture. One last word, you should always explicitly define the component layers in a custom layer/model. Here is our redefinition of the class ```VGGBlock```:
+
+```python
+class VGGBlock(tf.keras.layers.Layer):
+    def __init__(self, conv_layers=2, kernel_size=3, filters=64, **kwargs):
+        super(VGGBlock, self).__init__(**kwargs)
+        self.conv_layers = conv_layers
+        self.kernel_size = kernel_size
+        self.filters = filters
+
+    def build(self, input_shape):
+        self.conv2d_3_64_a = tf.keras.layers.Conv2D(self.filters, (self.kernel_size, self.kernel_size), activation='relu', padding='same')
+        if self.conv_layers == 2:
+            self.conv2d_3_64_b = tf.keras.layers.Conv2D(self.filters, (self.kernel_size, self.kernel_size), activation='relu', padding='same')
+        self.max_pool2d = tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2), padding='valid')
+
+    def call(self, input_tensor, training=False):
+        x = self.conv2d_3_64_a(input_tensor)
+        if self.conv_layers == 2:
+            x = self.conv2d_3_64_b(x)
+        x = self.max_pool2d(x)
+        return x
+
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'conv_layers': self.conv_layers,
+            'kernel_size': self.kernel_size,
+            'filters': self.filters,
+        })
+        return config
+```
+
+The details of how to implement a custom layer in Tensorflow should be read in the [official document](https://www.tensorflow.org/guide/keras/custom_layers_and_models#the_model_class).
+
+There is an error:
+
+```sh
+Traceback (most recent call last):
+  File "test.py", line 129, in <module>
+    plot_gradcam_of_a_model(model, X, image_titles, images)
+  File "/media/data-huy/Insights/part5/visualizations/automatic_plot_by_tf_keras_vis.py", line 101, in plot_gradcam_of_a_model
+    cam = gradcam(score,
+  File "/home/aioz-huy/miniconda3/envs/learn_tensorflow/lib/python3.8/site-packages/tf_keras_vis/gradcam.py", line 89, in __call__
+    model = ModelModifier(penultimate_layer, seek_penultimate_conv_layer)(self.model)
+  File "/home/aioz-huy/miniconda3/envs/learn_tensorflow/lib/python3.8/site-packages/tf_keras_vis/utils/model_modifiers.py", line 129, in __call__
+    raise ValueError("Unable to determine penultimate `Conv` layer. "
+ValueError: Unable to determine penultimate `Conv` layer. `penultimate_layer`=-1
+```
+
 ## Check again the filters_weights.shape, biases_weights.shape
 
 ## Conclusion

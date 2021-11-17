@@ -72,47 +72,103 @@ class VGG16Net(tf.keras.Model):
         })
         return config
 
-class VGGBlock(tf.keras.Model):
-    def __init__(self, conv_layers=2, kernel_size=3, filters=64):
-        super(VGGBlock, self).__init__(name='')
+class VGGBlock(tf.keras.layers.Layer):
+    def __init__(self, conv_layers=2, kernel_size=3, filters=64, **kwargs):
+        super(VGGBlock, self).__init__(**kwargs)
         self.conv_layers = conv_layers
         self.kernel_size = kernel_size
         self.filters = filters
 
-        self.layer_id = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-        for i in range(self.conv_layers):
-            # --- Option 1 ---
-            left_cls = ''.join(["self.conv2d", "_", str(self.kernel_size), "_", str(self.filters), "_", str(self.layer_id[i])])
-            right_cls = ''.join(["tf.keras.layers.Conv2D(", str(self.filters), ", ", "(", str(self.kernel_size), ", ", str(self.kernel_size), ")", ", ",
-                                "activation='relu'", ", ", "padding='same'", ")"])
-            assignation = ''.join([left_cls, '=', right_cls])
-            # print('[**] assignation: ', assignation)
-            exec(assignation)
-        
-        # print('[**] ', self.conv2d_3_64_a)
-        # print('[**] ', self.conv2d_3_64_b)
+    def build(self, input_shape):
+        self.conv2d_3_64_a = tf.keras.layers.Conv2D(self.filters, (self.kernel_size, self.kernel_size), activation='relu', padding='same')
+        if self.conv_layers == 2:
+            self.conv2d_3_64_b = tf.keras.layers.Conv2D(self.filters, (self.kernel_size, self.kernel_size), activation='relu', padding='same')
         self.max_pool2d = tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2), padding='valid')
 
-    # def compute_output_shape(self, input_shape):
-    #     # return super().compute_output_shape(input_shape)
-    #     return (input_shape[0], input_shape[1], input_shape[2])
-
     def call(self, input_tensor, training=False):
-        # print('[**] ', self.conv2d_3_64_a)
-        # print('[**] ', self.conv2d_3_64_b)
-        for i in range(self.conv_layers):
-            # layer = ''.join(["self.conv2d", "_", str(self.kernel_size), "_", str(self.filters), "_", str(self.layer_id[i])])
-            # print('[**] layer: ', eval(layer))
-            if i == 0:
-                layer = ''.join(["self.conv2d", "_", str(self.kernel_size), "_", str(self.filters), "_", str(self.layer_id[i])])
-                # print('[**] layer: ', eval(layer))
-                x = eval(layer)(input_tensor)
-            else:
-                layer = ''.join(["self.conv2d", "_", str(self.kernel_size), "_", str(self.filters), "_", str(self.layer_id[i])])
-                # print('[**] layer: ', eval(layer))
-                x = eval(layer)(x)
+        x = self.conv2d_3_64_a(input_tensor)
+        if self.conv_layers == 2:
+            x = self.conv2d_3_64_b(x)
         x = self.max_pool2d(x)
         return x
+
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'conv_layers': self.conv_layers,
+            'kernel_size': self.kernel_size,
+            'filters': self.filters,
+        })
+        return config
+
+# class VGGBlock(tf.keras.layers.Layer):
+#     def __init__(self, conv_layers=2, kernel_size=3, filters=64, **kwargs):
+#         super(VGGBlock, self).__init__(**kwargs)
+#         self.conv_layers = conv_layers
+#         self.kernel_size = kernel_size
+#         self.filters = filters
+
+#         self.layer_id = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+#         for i in range(self.conv_layers):
+#             # --- Option 1 ---
+#             left_cls = ''.join(["self.conv2d", "_", str(self.kernel_size), "_", str(self.filters), "_", str(self.layer_id[i])])
+#             right_cls = ''.join(["tf.keras.layers.Conv2D(", str(self.filters), ", ", "(", str(self.kernel_size), ", ", str(self.kernel_size), ")", ", ",
+#                                 "activation='relu'", ", ", "padding='same'", ")"])
+#             assignation = ''.join([left_cls, '=', right_cls])
+#             # print('[**] assignation: ', assignation)
+#             exec(assignation)
+        
+#         # print('[**] ', self.conv2d_3_64_a)
+#         # print('[**] ', self.conv2d_3_64_b)
+#         self.conv2d_3_64_a = tf.keras.layers.Conv2D(self.filters, (self.kernel_size, self.kernel_size), activation='relu', padding='same')
+#         if self.conv_layers == 2:
+#             self.conv2d_3_64_b = tf.keras.layers.Conv2D(self.filters, (self.kernel_size, self.kernel_size), activation='relu', padding='same')
+#         self.max_pool2d = tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2), padding='valid')
+
+#     # def compute_output_shape(self, input_shape):
+#     #     # return super().compute_output_shape(input_shape)
+#     #     return (input_shape[0], input_shape[1], input_shape[2])
+
+#     def call(self, input_tensor, training=False):
+#         # print('[**] ', self.conv2d_3_64_a)
+#         # print('[**] ', self.conv2d_3_64_b)
+#         for i in range(self.conv_layers):
+#             # layer = ''.join(["self.conv2d", "_", str(self.kernel_size), "_", str(self.filters), "_", str(self.layer_id[i])])
+#             # print('[**] layer: ', eval(layer))
+#             if i == 0:
+#                 layer = ''.join(["self.conv2d", "_", str(self.kernel_size), "_", str(self.filters), "_", str(self.layer_id[i])])
+#                 # print('[**] layer: ', eval(layer))
+#                 x = eval(layer)(input_tensor)
+#             else:
+#                 layer = ''.join(["self.conv2d", "_", str(self.kernel_size), "_", str(self.filters), "_", str(self.layer_id[i])])
+#                 # print('[**] layer: ', eval(layer))
+#                 x = eval(layer)(x)
+#         x = self.max_pool2d(x)
+#         return x
+
+#     def get_config(self):
+#         print('1')
+#         config = super().get_config().copy()
+#         str_config_dict = ""
+#         print('2')
+#         for i in range(self.conv_layers):
+#             layer = "".join(["conv2d", "_", str(self.kernel_size), "_", str(self.filters), "_", str(self.layer_id[i])])
+#             attr = "".join(["'", layer, "'", ": ", "self.", layer, ","])
+#             str_config_dict += attr
+#         print('3')
+
+#         str_config_dict = "{" + str_config_dict + "}"
+#         print('[**] str_config_dict: ', str_config_dict)
+#         print('4')
+#         assignation = "".join(["config_dict", "=", str_config_dict]) 
+#         print('[**] assignation: ', assignation)
+#         print('5')
+#         exec(assignation)
+
+#         print('6')
+#         config.update(eval("config_dict"))
+#         print('7')
+#         return config
 
 # class VGGBlock(tf.keras.Model):
 #     def __init__(self, conv_layers=2, kernel_size=3, filters=64):

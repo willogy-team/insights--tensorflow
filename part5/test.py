@@ -106,9 +106,9 @@ model = model.model()
 model.summary()
 # === Attentions ===
 image_titles = ['Chihuahua', 'Japanese_spaniel', 'Maltese_dog']
-img1 = load_img(os.path.join(args["train_dir"], 'n02085620-Chihuahua', 'n02085620_1558.jpg'), target_size=(128, 128))
-img2 = load_img(os.path.join(args["train_dir"], 'n02085782-Japanese_spaniel', 'n02085782_2874.jpg'), target_size=(128, 128))
-img3 = load_img(os.path.join(args["train_dir"], 'n02085936-Maltese_dog', 'n02085936_4245.jpg'), target_size=(128, 128))
+img1 = load_img(os.path.join(args["train_dir"], 'n02085620-Chihuahua', 'n02085620_1558.jpg'), target_size=(224, 224))
+img2 = load_img(os.path.join(args["train_dir"], 'n02085782-Japanese_spaniel', 'n02085782_2874.jpg'), target_size=(224, 224))
+img3 = load_img(os.path.join(args["train_dir"], 'n02085936-Maltese_dog', 'n02085936_4245.jpg'), target_size=(224, 224))
 img1 = np.asarray(img1)
 img2 = np.asarray(img2)
 img3 = np.asarray(img3)
@@ -118,7 +118,7 @@ X = images/255
     
 ## Vanilla saliency
 print('[*] Vanilla saliency')
-# plot_vanilla_saliency_of_a_model(model, X, image_titles)
+plot_vanilla_saliency_of_a_model(model, X, image_titles)
     
 ## SmoothGrad
 print('[*] SmoothGrad')
