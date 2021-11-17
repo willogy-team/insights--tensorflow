@@ -8,6 +8,8 @@ Trainable params: 13,782,835
 Non-trainable params: 0
 ```
 
+In this post, we will use the Tensorflow custom model to efficiently implement the VGG architecture so we can easily experiment with many variants of the network. The network architecture is deeper and will help us to increase the final performance.
+
 ## Table of contents
 
 1. [Increase the depth of the network](#increase-the-depth-of-the-network)
@@ -30,7 +32,7 @@ Non-trainable params: 0
 
 ## Increase the depth of the network
 
-According to the VGG paper [1], the network depth is one of the most important factors that lead to good visual representations. Due to this idea, in this part we try increasing the depth of the network to see how it affects to the final performances.
+According to the VGG paper [1], network depth is one of the most important factors that lead to good visual representations. Due to this idea, in this part, we try increasing the depth of the network to see how it affects to the final performances.
 
 We also introduce and address some new terms for the implementation in Tensorflow:
 - block of layers.
@@ -43,9 +45,9 @@ We also introduce and address some new terms for the implementation in Tensorflo
     <em><b>Figure 1:</b> VGG ConvNet configurations (from Table 1 of paper [1]). </em>
 </p>
 
-In column E, we can see that there are 5 convolutional blocks. Each block is a stack of layers. The first two blocks are similar in that they have 2 same convolutional layers. The latter three blocks are similar in that they have 3 same convolutional layers. Because of this, the use of custom model to define block of layers would give us an efficient way to define the network architectures.
+In column E, we can see that there are 5 convolutional blocks. Each block is a stack of layers. The first two blocks are similar in that they have the same 2 convolutional layers. The latter three blocks are similar in that they have the same 3 convolutional layers. Because of this, the use of the custom model to define a block of layers would give us an efficient way to define the network architectures.
 
-For more concrete information about the layers and the shape of each layer ouput, you should look in the figure 2 below.
+For more concrete information about the layers and the shape of each layer ouput, you should look in figure 2 below.
 
 <p align=center>
     <img src="images/2_vgg_architecture.JPG" width="480" alt>
@@ -54,7 +56,7 @@ For more concrete information about the layers and the shape of each layer ouput
     <em><b>Figure 2:</b> The VGG architecture (from [2]) </em>
 </p>
 
-Let's implement again the blocks of layers (or the network modules) that are used by the VGG architecture. All the convolutional layers in VGG  use filter size of 3x3 for the few parameters used (less computational cost).
+Let's implement again the blocks of layers (or the network modules) that are used by the VGG architecture. All the convolutional layers in VGG use filter size of 3x3 for the few parameters used (less computational cost).
 
 ## Implementation
 
@@ -66,7 +68,7 @@ In Figure 2, you have seen that the VGG network has 5 main blocks of convolution
 - They contain only convolutional layers.
 - There are more than 1 convolutional layers in each block.
 - The convolutional layers in each block have the same number of filters.
-- All of the convolutional layers use a filter size of 3x3.
+- All of the convolutional layers use filter size of 3x3.
 
 The 4 patterns here are enough to constitute an ideal situation that we should get familiar with custom model (custom layer) in Tensorflow.
 
@@ -93,7 +95,7 @@ def __init__(self, conv_layers=2, kernel_size=3, filters=64): # ADDED
     super(VGGBlock, self).__init__(name='') # ADDED
 ```
 
-The first 3 attributes are: the number of convolutional layers, the kernel size, and the number of filters in each convolutional layer.
+The first 3 attributes are the number of convolutional layers, the kernel size, and the number of filters in each convolutional layer.
 
 ```python
 def __init__(self, conv_layers=2, kernel_size=3, filters=64):
@@ -117,13 +119,13 @@ Below is the layer naming convention that we use.
 - ```<the number of filters>```: 32, 64, 128, 256, 512
 - ```<layer id>```: "a", "b", "c", "d", "e", "f", ...
 
-We can define a layer following to the naming convention like this:
+We can define a layer by following the naming convention like this:
 
 ```python
 self.conv2d_3_64_a = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same')
 ```
 
-However, when there are more layers to define we cannot do in the same way because the number of convolutional layers vary at different instantiations. To deal with this, we can define them iteratively (i.e in a loop).
+However, when there are more layers to define we cannot do in the same way because the number of convolutional layers varies at different instantiations. To deal with this, we can define them iteratively (i.e in a loop).
 
 First, we need to have a list of layer ids. Each layer id is an alphabet character. In this post, we just define at most 4 layers for each block, the list below surpasses the requirement.
 
@@ -162,7 +164,7 @@ Finally, call ```exec``` to execute the ```assignation```:
 exec(assignation)
 ```
 
-In this case, you can see that we carry out the assignation by string. This string is exactly the same as the case of one layer above. The only difference is we use string for assignation, which helps us to easily create a single attribute name for each convolutional layer. As a result, now we do not need to worry how many layers in the block.
+In this case, you can see that we carry out the assignation by string. This string is exactly the same as the case of one layer above. The only difference is we use string for assignation, which helps us to easily create a single attribute name for each convolutional layer. As a result, now we do not need to worry about how many layers are in the block.
 
 For catching up with the current flow, this is our code until now.
 
@@ -210,7 +212,7 @@ class VGGBlock(tf.keras.Model):
         self.max_pool2d = tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2), padding='valid')
 ```
 
-You may notice that the ```padding``` of convolutional layer and maxpool layer are different. In the conv layers, we use "same"; in the max pooling layer, we use "valid" (follow the figure 2). The value "same" is for padding so that the output has the same shape as input, while the value "valid" means no padding. As you can see in Figure 2, in each block the activation maps of all convolutional layers have an equal shape. That is the reason why we need to use the value "same" for padding. For the max pool layer, its output shape is as half as the input shape. And one more thing is that all the convolutional layers have even height and even width. So, to decrease the last convolutional activation map of a block by half, we just need to have a max pool layer of size (2, 2) and strides (2, 2) and there is no need for padding (You should pause here and think a little bit about this).
+You may notice that the ```padding``` of the convolutional layer and max-pooling layer are different. In the convolutional layers, we use "same"; in the max pooling layer, we use "valid" (follow figure 2). The value "same" is for padding so that the output has the same shape as input, while the value "valid" means no padding. As you can see in Figure 2, in each block the activation maps of all convolutional layers have an equal shape. That is the reason why we need to use the value "same" for padding. For the max pool layer, its output shape is as half as the input shape. And one more thing is that all the convolutional layers have even height and even width. So, to decrease the last convolutional activation map of a block by half, we just need to have a max pool layer of size (2, 2) and strides (2, 2) and there is no need for padding (You should pause here and think a little bit about this).
 
 **Method 2:** ```call```
 
@@ -218,7 +220,7 @@ This ```call``` method is to describe the forward pass of the block.
 
 You can ignore the ```training``` argument in ```call``` because it is for the BatchNorm layer but here we do not have one.
 
-Normally, we call the layer on an input to get the corresponding output like this (layer by layer in an sequential way):
+Normally, we call the layer on an input to get the corresponding output like this (layer by layer in a sequential way):
 
 ```python
 x = self.conv2d_3_64_a(input_tensor)
@@ -226,7 +228,7 @@ x = self.conv2d_3_128_a(x)
 ...
 ```
 
-However, because we have established the convolutional layers by string in ```__init__```, we also have to call the layers by string in ```call```. To do this, we first create a string variable ```layer``` for storing the attribute name.
+However, because we have established the convolutional layers by strings in ```__init__```, we also have to call the layers by strings in ```call```. To do this, we first create a string variable ```layer``` for storing the attribute name.
 
 ```python
 layer = ''.join(["self.conv2d", "_", str(self.kernel_size), "_", str(self.filters), "_", str(self.layer_id[i])])
@@ -347,7 +349,7 @@ First, import the class ```VGG16Net```.
 from networks.vgg import VGG16Net
 ```
 
-Then replace our previous network with it. We can do this by commenting out the current block of codes and call the ```VGG16Net```:
+Then replace our previous network with it. We can do this by commenting out the current block of codes and calling the ```VGG16Net```:
 
 ```python
 # model = tf.keras.Sequential([
@@ -362,7 +364,7 @@ Then replace our previous network with it. We can do this by commenting out the 
 model = VGG16Net(num_classes=3)
 ```
 
-Change the input shape from 128 to 224. There are 3 positions need to be changed: the train data generator, the test data generator, and the input shape that is put into the ```model.build()``` command.
+Change the input shape from 128 to 224. There are 3 positions that need to be changed: the train data generator, the test data generator, and the input shape that is put into the ```model.build()``` command.
 
 - Change the ```target_size``` of ```train_it``` and ```test_it``` to (224, 224).
 
@@ -379,7 +381,7 @@ input_shape = (None, 224, 224, 3)
 model.build(input_shape)
 ```
 
-Now, try runnning ```train.sh```. There will be a problem about incompatible shape. 
+Now, try running ```train.sh```. There will be a problem about incompatible shape. 
 
 ```sh
 (None, None) is incompatible with (None, None, None, 3).
@@ -394,7 +396,7 @@ Now, try runnning ```train.sh```. There will be a problem about incompatible sha
 
 What is this problem? How to solve it? This problem is about shape, so let's first try printing the output shape of each layer to see what happened.
 
-There is a simple way to do this that is to use ```model.summary()```. Unluckily, it doesn't show information about the output shape, possibly because we use custom model for building blocks. We need to try another way.
+There is a simple way to do this that is to use ```model.summary()```. Unluckily, it doesn't show information about the output shape, possibly because we use the custom model for building blocks. We need to try another way.
 
 <p align=center>
     <img src="images/4_model_summary.JPG" width="480" alt>
@@ -431,7 +433,7 @@ def call(self, inputs):
     return x
 ```
 
-Let's run the file ```train.sh``` again. We will see the shapes be printed two times: before and after the ```model.summary()```. Checking the first time, we will notice problem in the dense layers.
+Let's run the file ```train.sh``` again. We will see the shapes be printed two times: before and after the ```model.summary()```. Checking the first time, we will notice problems in the dense layers.
 
 <p align=center>
     <img src="images/5_shape_of_each_layer.JPG" width="480" alt>
@@ -440,7 +442,7 @@ Let's run the file ```train.sh``` again. We will see the shapes be printed two t
     <em><b>Figure 5:</b> The problem in the shape of the dense layers. </em>
 </p>
 
-A dense layer shape should be 3-dimensional (one is for the batch size). Nonetheles, there are 4-dimensional. Why is that? You should think a little bit before checking the answer below.
+A dense layer shape should be 3-dimensional (one is for the batch size). Nonetheless, there are 4-dimensional. Why is that? You should think a little bit before checking the answer below.
 
 That is because we haven't flattened the output of the last convolutional layer. Now, add the flatten layer to both the ```__init__``` and ```call``` and run again.
 
@@ -524,7 +526,7 @@ Keep the batch size 8 and come to the next improvement.
 
 ## Improvement 3: decrease the network complexity 1, learning rate=1e-4, batch size=8
 
-We decrease the network complexity by removing one convolutional layer from each block. To accomplish this, we just need to change the value of ```conv_layers``` in each block. Change ```conv_layers``` of block 1 and block 2 from 2 to 1. Change ```conv_layers``` of block 3, block 4, and block 5 from 3 to 2. The ```input_shape``` of the flatten layer is also changed according to the block 5. The number of units in each of the 3 dense layers is also decreased from 4096 to 496.
+We decrease the network complexity by removing one convolutional layer from each block. To accomplish this, we just need to change the value of ```conv_layers``` in each block. Change ```conv_layers``` of block 1 and block 2 from 2 to 1. Change ```conv_layers``` of block 3, block 4, and block 5 from 3 to 2. The ```input_shape``` of the flatten layer is also changed according to block 5. The number of units in each of the 3 dense layers is also decreased from 4096 to 496.
 
 More than that, The ```filters``` in each block is also decreased by half.
 
@@ -677,7 +679,7 @@ class VGG16Net(tf.keras.Model):
 
 It continues to increase when the network becomes less complex. The validation accuracy has now become quite better, about 83.3%.
 
-And this is the tensorboard after improvement 8.
+And this is the Tensorboard after improvement 8.
 
 <p align=center>
     <img src="images/15_tensorboard.JPG" width="480" alt>
@@ -700,8 +702,8 @@ pip install -r requirements
 
 - Step 1: In the file ```train.sh``` is the command that is used for training. The command is like below. You need to change its arguments:
 
-  - ```-trd```: the absolute path to the created train folder which is set in the part 1 of this series.
-  - ```-td```: the absolute path to the created test folder of "Step 2" which is set in the part 1 of this series.
+  - ```-trd```: the absolute path to the created train folder which is set in part 1 of this series.
+  - ```-td```: the absolute path to the created test folder of "Step 2" which is set in part 1 of this series.
   - ```-mpd```: the path to the folder for saving checkpoints.
   - ```-imp```: the path to the folder for saving the image of model plot.
 
@@ -747,7 +749,7 @@ The visualization figures will be displayed one after another. To go to the next
 
 ## Conclusion
 
-In this post, we have shown you what is a custom model (or custom layer), how to use it in Tensorflow, and see how it can bring us more efficiency when coding and experimenting with different variations of a network architecture. The results on the 3-class Stanford dataset have also become far better. In the next posts, we will continue with Tensorflow custom model to try using it to implement other popular network architectures.
+In this post, we have shown you what is a custom model (or custom layer), how to use it in Tensorflow, and see how it can bring us more efficiency when coding and experimenting with different variations of network architecture. The results on the 3-class Stanford dataset have also become far better. In the next posts, we will continue with the Tensorflow custom model to try using it to implement other popular network architectures.
 
 ## References
 
