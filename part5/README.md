@@ -431,6 +431,17 @@ class VGGBlock(tf.keras.layers.Layer):
 
 The details of how to implement a custom layer in Tensorflow should be read in the [official document](https://www.tensorflow.org/guide/keras/custom_layers_and_models#the_model_class).
 
+Also, remember to change the ```target_size``` when loading input images:
+
+```python
+# img1 = load_img(os.path.join(args["train_dir"], 'n02085620-Chihuahua', 'n02085620_1558.jpg'), target_size=(128, 128)) # old
+# img2 = load_img(os.path.join(args["train_dir"], 'n02085782-Japanese_spaniel', 'n02085782_2874.jpg'), target_size=(128, 128)) # old
+# img3 = load_img(os.path.join(args["train_dir"], 'n02085936-Maltese_dog', 'n02085936_4245.jpg'), target_size=(128, 128)) # old
+img1 = load_img(os.path.join(args["train_dir"], 'n02085620-Chihuahua', 'n02085620_1558.jpg'), target_size=(224, 224)) # new
+img2 = load_img(os.path.join(args["train_dir"], 'n02085782-Japanese_spaniel', 'n02085782_2874.jpg'), target_size=(224, 224)) # new
+img3 = load_img(os.path.join(args["train_dir"], 'n02085936-Maltese_dog', 'n02085936_4245.jpg'), target_size=(224, 224)) # new
+```
+
 There is an error:
 
 ```sh
@@ -445,6 +456,19 @@ Traceback (most recent call last):
     raise ValueError("Unable to determine penultimate `Conv` layer. "
 ValueError: Unable to determine penultimate `Conv` layer. `penultimate_layer`=-1
 ```
+
+By default, the GradCam function of ```tf.keras.vis``` seeks the last convolutional layer in the network architecture if the ```penultimate_layer``` is set to -1. However, here we do not have Conv layers because everything has been put into block. Thus, we do not want it to seek automatically by set the ```seek_penultimate_conv_layer``` to False. Moreover, we have to point out what is the ```penultimate_layer```. We choose the last VGG block "vgg_block_4" as the ```penultimate_layer``` (you can get the layer name from ```model.summary()```):
+
+```python
+cam = gradcam(score,
+                X,
+                seek_penultimate_conv_layer=False, # new
+                penultimate_layer='vgg_block_4') # new
+```
+
+Similarly, we also modify like above for all the other visualization methods.
+
+Now, run ```test.sh``` and see the visualization results.
 
 ## Check again the filters_weights.shape, biases_weights.shape
 

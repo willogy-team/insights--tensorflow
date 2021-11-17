@@ -54,7 +54,7 @@ for idx, layer in enumerate(model.layers):
         # print('[**] filters_weights: ', filters_weights)
     print('[**] layer.output.shape: {}'.format(layer.output.shape))
 
-    # plot_filters_of_a_layer(filters_weights, 3)
+    plot_filters_of_a_layer(filters_weights, 3)
 
 # === Output feature maps from a single layer ===
 # A PIL object
@@ -96,7 +96,7 @@ for feature_map in feature_maps_2:
 plot_feature_maps_of_multiple_layers(feature_maps_2)
     
 # === Output activation maximization from a single layer ===
-plot_activation_maximization_of_a_layer(model, 2)
+plot_activation_maximization_of_a_layer(model, 4)
     
 # === GradCam++ from a single layer ===
 # plot_gradcam_plusplus_of_a_layer(model, 2)

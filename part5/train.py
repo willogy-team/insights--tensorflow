@@ -68,10 +68,10 @@ model = VGG16Net(num_classes=3)
 
 input_shape = (None, 224, 224, 3)
 model.build(input_shape)
-model.summary()
+model.model().summary()
 image_path = args["image_path"]
 os.makedirs(image_path, exist_ok=True)
-tf.keras.utils.plot_model(model, to_file="".join([image_path, "/model.png"]), show_shapes=True)
+tf.keras.utils.plot_model(model.model(), to_file="".join([image_path, "/model.png"]), show_shapes=True)
 
 for layer in model.layers:
     # print('[*] layer: ', layer)

@@ -26,14 +26,18 @@ def plot_activation_maximization_of_a_layer(model, layer_index):
 
     # You can use Score class to specify visualizing target you want.
     # And add regularizers or input-modifiers as needed.
-    FILTER_INDEX = 7
+    FILTER_INDEX = 500
+    # activations = \
+    # activation_maximization(CategoricalScore(FILTER_INDEX),
+    #                         steps=100,
+    #                         input_modifiers=[Jitter(jitter=16), Rotate2D(degree=1)],
+    #                         regularizers=[TotalVariation2D(weight=1.0),
+    #                                         Norm(weight=0.3, p=1)],
+    #                         optimizer=tf.keras.optimizers.Adam(1.0, 0.999),
+    #                         callbacks=[Progress()])
     activations = \
     activation_maximization(CategoricalScore(FILTER_INDEX),
-                            steps=100,
-                            input_modifiers=[Jitter(jitter=16), Rotate2D(degree=1)],
-                            regularizers=[TotalVariation2D(weight=1.0),
-                                            Norm(weight=0.3, p=1)],
-                            optimizer=tf.keras.optimizers.Adam(1.0, 0.999),
+                            steps=500,
                             callbacks=[Progress()])
 
     ## Since v0.6.0, calling `astype()` is NOT necessary.
@@ -91,6 +95,8 @@ def plot_smoothgrad_of_a_model(model, X, image_titles):
 
 def plot_gradcam_of_a_model(model, X, image_titles, images):
     score = CategoricalScore(list(range(X.shape[0])))
+    # filter_numbers = [63, 132, 320]
+    # score = CategoricalScore(filter_numbers)
 
     # Create Gradcam object
     gradcam = Gradcam(model,
@@ -100,7 +106,8 @@ def plot_gradcam_of_a_model(model, X, image_titles, images):
     # Generate heatmap with GradCAM
     cam = gradcam(score,
                   X,
-                  penultimate_layer=-1)
+                  seek_penultimate_conv_layer=False,
+                  penultimate_layer='vgg_block_4')
 
     # Render
     f, ax = plt.subplots(nrows=1, ncols=3, figsize=(12, 4))
@@ -115,15 +122,18 @@ def plot_gradcam_of_a_model(model, X, image_titles, images):
 
 def plot_gradcam_plusplus_of_a_model(model, X, image_titles, images):
     score = CategoricalScore(list(range(X.shape[0])))
+    # filter_numbers = [63, 132, 320]
+    # score = CategoricalScore(filter_numbers)
     # Create GradCAM++ object
     gradcam = GradcamPlusPlus(model,
-                          model_modifier=ReplaceToLinear(),
-                          clone=True)
+                            model_modifier=ReplaceToLinear(),
+                            clone=True)
 
     # Generate heatmap with GradCAM++
     cam = gradcam(score,
                   X,
-                  penultimate_layer=-1)
+                  seek_penultimate_conv_layer=False,
+                  penultimate_layer='vgg_block_4')
 
     # Render
     f, ax = plt.subplots(nrows=1, ncols=3, figsize=(12, 4))
@@ -138,11 +148,18 @@ def plot_gradcam_plusplus_of_a_model(model, X, image_titles, images):
 
 def plot_scorecam_of_a_model(model, X, image_titles, images):
     score = CategoricalScore(list(range(X.shape[0])))
+    # filter_numbers = [63, 132, 320]
+    # score = CategoricalScore(filter_numbers)
     # Create ScoreCAM object
-    scorecam = Scorecam(model, model_modifier=ReplaceToLinear())
+    scorecam = Scorecam(model, 
+                        model_modifier=ReplaceToLinear(),
+                        clone=True)
 
     # Generate heatmap with ScoreCAM
-    cam = scorecam(score, X, penultimate_layer=-1)
+    cam = scorecam(score, 
+                   X, 
+                   seek_penultimate_conv_layer=False,
+                   penultimate_layer='vgg_block_4')
 
     ## Since v0.6.0, calling `normalize()` is NOT necessary.
     # cam = normalize(cam)
@@ -161,13 +178,16 @@ def plot_scorecam_of_a_model(model, X, image_titles, images):
 def plot_faster_scorecam_of_a_model(model, X, image_titles, images):
     score = CategoricalScore(list(range(X.shape[0])))
     # Create ScoreCAM object
-    scorecam = Scorecam(model, model_modifier=ReplaceToLinear())
+    scorecam = Scorecam(model, 
+                        model_modifier=ReplaceToLinear(),
+                        clone=True)
 
     # Generate heatmap with Faster-ScoreCAM
     cam = scorecam(score,
-                X,
-                penultimate_layer=-1,
-                max_N=8)
+                   X,
+                   seek_penultimate_conv_layer=False, 
+                   penultimate_layer='vgg_block_4',
+                   max_N=8)
 
     ## Since v0.6.0, calling `normalize()` is NOT necessary.
     # cam = normalize(cam)
