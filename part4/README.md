@@ -47,7 +47,7 @@ We also introduce and address some new terms for the implementation in Tensorflo
 
 In column E, we can see that there are 5 convolutional blocks. Each block is a stack of layers. The first two blocks are similar in that they have the same 2 convolutional layers. The latter three blocks are similar in that they have the same 3 convolutional layers. Because of this, the use of the custom model to define a block of layers would give us an efficient way to define the network architectures.
 
-For more concrete information about the layers and the shape of each layer ouput, you should look in figure 2 below.
+For more concrete information about the layers and the shape of each layer output, you should look at Figure 2 below.
 
 <p align=center>
     <img src="images/2_vgg_architecture.JPG" width="480" alt>
@@ -66,7 +66,7 @@ First, let's create a new folder named ```networks``` for storing the code relat
 
 In Figure 2, you have seen that the VGG network has 5 main blocks of convolutional layers. All of the 5 blocks have some patterns in common:
 - They contain only convolutional layers.
-- There are more than 1 convolutional layers in each block.
+- There is more than 1 convolutional layer in each block.
 - The convolutional layers in each block have the same number of filters.
 - All of the convolutional layers use filter size of 3x3.
 
