@@ -164,7 +164,7 @@ Finally, call ```exec``` to execute the ```assignation```:
 exec(assignation)
 ```
 
-In this case, you can see that we carry out the assignation by string. This string is exactly the same as the case of one layer above. The only difference is we use string for assignation, which helps us to easily create a single attribute name for each convolutional layer. As a result, now we do not need to worry about how many layers are in the block.
+In this case, you can see that we carry out the assignation by string. This string is exactly the same as the case of one layer above. The only difference is we use string for an assignation, which helps us to easily create a single attribute name for each convolutional layer. As a result, now we do not need to worry about how many layers are in the block.
 
 For catching up with the current flow, this is our code until now.
 
@@ -212,7 +212,7 @@ class VGGBlock(tf.keras.Model):
         self.max_pool2d = tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2), padding='valid')
 ```
 
-You may notice that the ```padding``` of the convolutional layer and max-pooling layer are different. In the convolutional layers, we use "same"; in the max pooling layer, we use "valid" (follow figure 2). The value "same" is for padding so that the output has the same shape as input, while the value "valid" means no padding. As you can see in Figure 2, in each block the activation maps of all convolutional layers have an equal shape. That is the reason why we need to use the value "same" for padding. For the max pool layer, its output shape is as half as the input shape. And one more thing is that all the convolutional layers have even height and even width. So, to decrease the last convolutional activation map of a block by half, we just need to have a max pool layer of size (2, 2) and strides (2, 2) and there is no need for padding (You should pause here and think a little bit about this).
+You may notice that the ```padding``` of the convolutional layer and max-pooling layer are different. In the convolutional layers, we use "same"; in the max pooling layer, we use "valid" (follow Figure 2). The value "same" is for padding so that the output has the same shape as input, while the value "valid" means no padding. As you can see in Figure 2, in each block the activation maps of all convolutional layers have an equal shape. That is the reason why we need to use the value "same" for padding. For the max pool layer, its output shape is as half as the input shape. And one more thing is that all the convolutional layers have even height and even width. So, to decrease the last convolutional activation map of a block by half, we just need to have a max pool layer of size (2, 2) and strides (2, 2) and there is no need for padding (You should pause here and think a little bit about this).
 
 **Method 2:** ```call```
 
@@ -688,7 +688,7 @@ And this is the Tensorboard after improvement 8.
     <em><b>Figure 6:</b> The Tensorboard. </em>
 </p>
 
-During 100 epochs, both the train accuracy and test accuracy has a trend of increase. For the loss function, the distance between the two curves is greater than that of the accuracy.
+During 100 epochs, both the training accuracy and testing accuracy have a trend of increase. For the loss function, the distance between the two curves is greater than that of the accuracy.
 
 ## Running the codes
 
