@@ -56,21 +56,21 @@ class VGG16Net(tf.keras.Model):
         x = tf.keras.layers.Input(shape=(224, 224, 3))
         return tf.keras.Model(inputs=[x], outputs=self.call(x))
 
-    def get_config(self):
-        config = super().get_config().copy()
-        config.update({
-            'block_1': self.block_1,
-            'block_2': self.block_2,
-            'block_3': self.block_3,
-            'block_4': self.block_4,
-            'block_5': self.block_5,
-            'flatten': self.flatten,
-            'dense_1': self.dense_1,
-            'dense_2': self.dense_2,
-            'dense_3': self.dense_3,
-            'classifier': self.classifier,
-        })
-        return config
+    # def get_config(self):
+    #     config = super().get_config().copy()
+    #     config.update({
+    #         'block_1': self.block_1,
+    #         'block_2': self.block_2,
+    #         'block_3': self.block_3,
+    #         'block_4': self.block_4,
+    #         'block_5': self.block_5,
+    #         'flatten': self.flatten,
+    #         'dense_1': self.dense_1,
+    #         'dense_2': self.dense_2,
+    #         'dense_3': self.dense_3,
+    #         'classifier': self.classifier,
+    #     })
+    #     return config
 
 class VGGBlock(tf.keras.layers.Layer):
     def __init__(self, conv_layers=2, kernel_size=3, filters=64, **kwargs):

@@ -24,14 +24,15 @@ def plot_filters_of_a_layer(filters_weights, num_filters):
             # plot filter channel in grayscale
             plt.imshow(f[:, :, j], cmap='gray')
             ix += 1
+        
     # show the figure
     plt.show()
 
 def plot_feature_maps_of_a_layer(feature_maps):
     ix = 1
-    for _ in range(2):
-        for _ in range(4):
-            ax = plt.subplot(2, 4, ix)
+    for _ in range(8):
+        for _ in range(8):
+            ax = plt.subplot(8, 8, ix)
             ax.set_xticks([])
             ax.set_yticks([])
             plt.imshow(feature_maps[0, :, :, ix-1], cmap='gray')

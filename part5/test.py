@@ -52,9 +52,9 @@ for idx, layer in enumerate(model.layers):
         filters_max, filters_min = list_of_weights[2*i].max(), list_of_weights[2*i].min()
         filters_weights = (list_of_weights[2*i] - filters_min)/(filters_max - filters_min)
         # print('[**] filters_weights: ', filters_weights)
+        plot_filters_of_a_layer(filters_weights, 10)
     print('[**] layer.output.shape: {}'.format(layer.output.shape))
 
-    plot_filters_of_a_layer(filters_weights, 3)
 
 # === Output feature maps from a single layer ===
 # A PIL object
@@ -86,7 +86,7 @@ print('[*] feature_maps_1.shape: ', feature_maps_1.shape)
 plot_feature_maps_of_a_layer(feature_maps_1)
     
 # === Output feature maps from multiple layers ===
-list_of_outputs = [model.layers[idx].output for idx in range(3)]
+list_of_outputs = [model.layers[idx].output for idx in range(5)]
 model_2 = Model(inputs=model.layers[0].input, outputs=list_of_outputs)
 model_2.summary()
 feature_maps_2 = model_2.predict(img) 
