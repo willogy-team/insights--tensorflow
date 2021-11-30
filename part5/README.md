@@ -113,7 +113,7 @@ def model(self):
     return tf.keras.Model(inputs=[x], outputs=self.call(x))
 ```
 
-The rationale behind the solution is when the ```self.call()``` is invoked on the input ```x```, the shape computation is executed for each layer. Besides, the ```tf.keras.Model``` instance also compute shapes which are returned in ```model.summary()```. One drawback is that we have to define the input shape manually (look atthe variable ```x``` inside the method ```model```). Here, the input shape is the same as specified in the ```train.py```.
+The rationale behind the solution is when the ```self.call()``` is invoked on the input ```x```, the shape computation is executed for each layer. Besides, the ```tf.keras.Model``` instance also compute shapes which are returned in ```model.summary()```. One drawback is that we have to define the input shape manually (look at the variable ```x``` inside the method ```model```). Here, the input shape is the same as specified in the ```train.py```.
 
 In ```test.py```, replace ```model.summary()``` with ```model.model().summary()```:
 
