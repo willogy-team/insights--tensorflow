@@ -1,6 +1,6 @@
 # Tensorflow insights - part 5: Custom model - continue
 
-In the last part, we have shown how to use the custom model to implement the VGG network. However, one problem remained is we cannot use model.summary() to see the output shape of each layer. In addition, we also cannot get the shape of filters. Although we know how the VGG is constructed, overcoming this problem will help the end users - who only use our checkpoint files to investigate the model. In particular, it is very important for us to get the output shape of each layer/block when using the file ```test.py```.
+In the last part, we have shown how to use the custom model to implement the VGG network. However, one problem that remained is we cannot use model.summary() to see the output shape of each layer. In addition, we also cannot get the shape of filters. Although we know how the VGG is constructed, overcoming this problem will help the end-users - who only use our checkpoint files to investigate the model. In particular, it is very important for us to get the output shape of each layer/block when using the file ```test.py```.
 
 ## Table of contents
 
@@ -79,7 +79,7 @@ AttributeError: Layer vgg_block has no inbound nodes.
 
 ## Solve the problem "AttributeError: Layer vgg_block has no inbound nodes"
 
-There is a problems with the output shape information of each layer. We can verify it by using the ```model.summary()```. Let's add the ```model.summary()``` right after the model is built:
+There is a problem with the output shape information of each layer. We can verify it by using the ```model.summary()```. Let's add the ```model.summary()``` right after the model is built:
 
 ```python
 model.summary()
@@ -113,7 +113,7 @@ def model(self):
     return tf.keras.Model(inputs=[x], outputs=self.call(x))
 ```
 
-The rationale behind the solution is when the ```self.call()``` is invoked on the input ```x```, the shape computation is executed for each layer. Besides, the ```tf.keras.Model``` instance also compute shapes which are returned in ```model.summary()```. One drawback is that we have to  define the input shape manually (look atthe variable ```x``` inside the method ```model```). Here, the input shape is the same as specified in the ```train.py```.
+The rationale behind the solution is when the ```self.call()``` is invoked on the input ```x```, the shape computation is executed for each layer. Besides, the ```tf.keras.Model``` instance also compute shapes which are returned in ```model.summary()```. One drawback is that we have to define the input shape manually (look atthe variable ```x``` inside the method ```model```). Here, the input shape is the same as specified in the ```train.py```.
 
 In ```test.py```, replace ```model.summary()``` with ```model.model().summary()```:
 
@@ -122,7 +122,7 @@ In ```test.py```, replace ```model.summary()``` with ```model.model().summary()`
 model.model().summary() # new
 ```
 
-We also need to modify the loop which is right below the line of loading weights. In the loop, we comment out the if statement as there is no layer with "conv" in its name. And add a line for printing the length of the returned list of ```layer.get_weights()```. This information is not used immediately, but will be used below.
+We also need to modify the loop which is right below the line of loading weights. In the loop, we comment out the if statement as there is no layer with "conv" in its name. And add a line for printing the length of the returned list of ```layer.get_weights()```. This information is not used immediately but will be used below.
 
 ```python
 for idx, layer in enumerate(model.layers):
@@ -151,7 +151,7 @@ Now, run again the ```test.sh```. Below is the new result of ```model.model().su
     <em><b>Figure 3:</b> The result of model.model().summary(). </em>
 </p>
 
-Printing information of the following loop also seems to be very good, except that there is an error when the iteration at the last vgg block happens:
+Printing information of the following loop also seems to be very good, except that there is an error when the iteration at the last VGG block happens:
 
 ```sh
 [*] layer:  <networks.vgg.VGGBlock object at 0x7f2bf7e97400>
@@ -186,7 +186,7 @@ The traceback points out that there are too many values to unpack at the line of
 [**] len(layer.get_weights()):  4 <class 'list'>
 ```
 
-While the previous iterations only have 2 elemnents from ```layer.get_weights()```, the last VGG block has twice as many as them. Why is that? Looking at the VGG architecture we specify in the end of part 4, you can see that each of the first 4 blocks has only 1 convolutional layer while the last block has 2 convolutional layers. This is the reason why the ```layer.get_weights()``` returns 4 for the last block.
+While the previous iterations only have 2 elements from ```layer.get_weights()```, the last VGG block has twice as many as them. Why is that? Looking at the VGG architecture we specify at the end of part 4, you can see that each of the first 4 blocks has only 1 convolutional layer while the last block has 2 convolutional layers. This is the reason why the ```layer.get_weights()``` returns 4 for the last block.
 
 ```python
 self.block_1 = VGGBlock(conv_layers=1, filters=64)
@@ -240,7 +240,7 @@ ValueError: Input tensors to a Functional must come from `tf.keras.Input`. Recei
 
 In the current state of the code in ```test.py```, we use the Sequential model to reconstruct a network, but here we use the Tensorflow custom model.
 
-For some reasons, the ```model.inputs``` is None. It may be due to the use of custom model. So, we will try defining the input ourselves by using ```tf.keras.Input```:
+For some reason, the ```model.inputs``` is None. It may be due to the use of the custom model. So, we will try defining the input ourselves by using ```tf.keras.Input```:
 
 ```python
 x = tf.keras.Input(shape=(224, 224, 3)) # The input shape is set to the same as in training stage
@@ -394,7 +394,7 @@ TypeError: ('Keyword argument not understood:', 'conv2d_3_64_a')
 
 ## Solve the problem "TypeError: ('Keyword argument not understood:', 'conv2d_3_64_a')"
 
-It looks like our ```get_config()``` cannot find the argument ```conv2d_```. Do you recognize the pattern name? That is the name of a convolutional layer in a VGG block according to our naming convention. We do not know exactly the reason, but there is a high chance that it is related to the underlying code of Tensorflow Keras. And it is hard to dig into the lower-level code, so it is better to get away from it. As far as we have come here, we really have made the wrong complex choice at first (in part 4). We should not have used the ```exec``` or ```eval``` because it is an unofficial way to declare variables in Python. The keyword cannot be found due to the variable declaration by string. No matter what have happened, the use of ```exec``` is a neat way to define many variants of a network architecture. However, one thing needs to be emphasized here is that you should always explicitly define the component layers in a custom layer/model. Below is our redefinition of the class ```VGGBlock```:
+It looks like our ```get_config()``` cannot find the argument ```conv2d_```. Do you recognize the pattern name? That is the name of a convolutional layer in a VGG block according to our naming convention. We do not know exactly the reason, but there is a high chance that it is related to the underlying code of Tensorflow Keras. And it is hard to dig into the lower-level code, so it is better to get away from it. As far as we have come here, we really have made the wrong complex choice at first (in part 4). We should not have used the ```exec``` or ```eval``` because it is an unofficial way to declare variables in Python. The keyword cannot be found due to the variable declaration by string. No matter what has happened, the use of ```exec``` is a neat way to define many variants of network architecture. However, one thing that needs to be emphasized here is that you should always explicitly define the component layers in a custom layer/model. Below is our redefinition of the class ```VGGBlock```:
 
 ```python
 class VGGBlock(tf.keras.layers.Layer):
@@ -533,7 +533,7 @@ Now, run ```test.sh``` and watch some visualization results.
     <em><b>Figure 13:</b> The ScoreCAM of the last conv layer (the last block). </em>
 </p>
 
-All the Chihuahua images in Figure 11, 12 and 13 have a strong heatmap on the dog's face. For Japanese Spaniel, the heatmap is on the region that has both the black fur and white fur. And like in the SmoothGrad, heatmaps lie in the background for all three Maltese dog images.
+All the Chihuahua images in Figures 11, 12, and 13 have a strong heatmap on the dog's face. For Japanese Spaniel, the heatmap is on the region that has both black fur and white fur. And like in the SmoothGrad, heatmaps lie in the background for all three Maltese dog images.
 
 <p align=center>
     <img src="images/22_faster_scorecam_of_the_last_conv_layer.png" width="480" alt>
@@ -557,7 +557,7 @@ pip install -r requirements
   - ```-trd```: the absolute path to the created train folder which is set in part 1 of this series.
   - ```-td```: the absolute path to the created test folder of "Step 2" which is set in part 1 of this series.
   - ```-mpd```: the path to the folder for saving checkpoints.
-  - ```-imp```: the path to the folder for saving the image of model plot.
+  - ```-imp```: the path to the folder for saving the image of the model plot.
 
 ```sh
 python train.py \
@@ -601,7 +601,7 @@ The visualization figures will be displayed one after another. To go to the next
 
 ## Conclusion
 
-Sigh... , we have confronted with many problems to complete this part. Though there are many bugs, we have also certainly accomplished a lot by solving them. From the problem of static graph in Tensorflow which prevents showing the output shapes, ```tf.keras.layers.Layer```, the use of ```get_config``` to overcome the problem of "NotImplementedError" to the use of ```tf.keras.vis``` for the Tensorflow custom model, all of them are valuable insights when learning Tensorflow.
+Sigh..., we have been confronted with many problems to complete this part. Though there are many bugs, we have also certainly accomplished a lot by solving them. From the problem of the static graph in Tensorflow which prevents showing the output shapes, ```tf.keras.layers.Layer```, the use of ```get_config``` to overcome the problem of "NotImplementedError" to the use of ```tf.keras.vis``` for the Tensorflow custom model, all of them are valuable insights when learning Tensorflow.
 
 ## References
 
