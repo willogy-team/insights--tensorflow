@@ -309,7 +309,86 @@ In the current version of ```InceptionModule```, there is one path that uses a 5
     <em><b>Figure 3:</b> Factorization into smaller convolutions. </em>
 </p>
 
-In code, we just need to modify one path that has a 5x5 convolutional layer. But wait! We will address some more things before going into the code.
+In code, we just need to modify one path that has a 5x5 convolutional layer. The method ```build``` and the method ```call``` of the class ```InceptionModule``` are modified like below:
+
+```python
+def build(self, input_shape):
+    # === First path for the 1x1 convolutional layer ===
+    self.conv2d_1_nf1 = tf.keras.layers.Conv2D(self.n_filters_of_conv_layer_1,
+                                               (1, 1),
+                                               padding='same',
+                                               activation='relu')
+    self.bn_1_nf1 = tf.keras.layers.BatchNormalization()
+    # === Second path for the 3x3 convolutional layer ===
+    self.conv2d_1_nf2_a = tf.keras.layers.Conv2D(self.n_filters_of_conv_layer_2_a,
+                                                 (1, 1),
+                                                 padding='same',
+                                                 activation='relu')
+    self.bn_1_nf2_a = tf.keras.layers.BatchNormalization()
+    self.conv2d_3_nf2_b = tf.keras.layers.Conv2D(self.n_filters_of_conv_layer_2_b,
+                                                 (3, 3),
+                                                 padding='same',
+                                                 activation='relu')
+    self.bn_3_nf2_b = tf.keras.layers.BatchNormalization()
+    # === Third path for the 5x5 convolutional layer ===
+    self.conv2d_1_nf3_a = tf.keras.layers.Conv2D(self.n_filters_of_conv_layer_3_a,
+                                                 (1, 1),
+                                                 padding='same',
+                                                 activation='relu')
+    self.bn_1_nf3_a = tf.keras.layers.BatchNormalization()
+    self.conv2d_3_nf3_b_i = tf.keras.layers.Conv2D(self.n_filters_of_conv_layer_3_b,
+                                                 (3, 3),
+                                                 padding='same',
+                                                 activation='relu')
+    self.bn_3_nf3_b_i = tf.keras.layers.BatchNormalization()
+    self.conv2d_3_nf3_b_ii = tf.keras.layers.Conv2D(self.n_filters_of_conv_layer_3_b,
+                                                 (3, 3),
+                                                 padding='same',
+                                                 activation='relu')
+    self.bn_3_nf3_b_ii = tf.keras.layers.BatchNormalization()
+    # === Fourth path for the 3x3 max-pool layer ===
+    self.avg_pool2d = tf.keras.layers.AveragePooling2D((3, 3), 
+                                                strides=(1, 1), 
+                                                padding='same')
+    self.conv2d_1_nf4 = tf.keras.layers.Conv2D(self.n_filters_of_conv_layer_4,
+                                                 (1, 1),
+                                                 padding='same',
+                                                 activation='relu')
+    self.bn_1_nf4 = tf.keras.layers.BatchNormalization()
+    self.concatenation = tf.keras.layers.Concatenate(axis=-1)
+
+def call(self, input_tensor, training=False):
+    # === First path for the 1x1 convolutional layer ===
+    conv2d_1_nf1 = self.conv2d_1_nf1(input_tensor)
+    bn_1_nf1 = self.bn_1_nf1(conv2d_1_nf1, training=training)
+
+    # === Second path for the 3x3 convolutional layer ===
+    conv2d_1_nf2_a = self.conv2d_1_nf2_a(input_tensor)
+    bn_1_nf2_a = self.bn_1_nf2_a(conv2d_1_nf2_a, training=training)
+    conv2d_3_nf2_b = self.conv2d_3_nf2_b(bn_1_nf2_a)
+    bn_3_nf2_b = self.bn_3_nf2_b(conv2d_3_nf2_b, training=training)
+
+    # === Third path for the 5x5 convolutional layer ===
+    conv2d_1_nf3_a = self.conv2d_1_nf3_a(input_tensor)
+    bn_1_nf3_a = self.bn_1_nf3_a(conv2d_1_nf3_a, training=training)
+    conv2d_3_nf3_b_i = self.conv2d_3_nf3_b_i(bn_1_nf3_a)
+    bn_3_nf3_b_i = self.bn_3_nf3_b_i(conv2d_3_nf3_b_i, training=training)
+    conv2d_3_nf3_b_ii = self.conv2d_3_nf3_b_ii(bn_3_nf3_b_i)
+    bn_3_nf3_b_ii = self.bn_3_nf3_b_ii(conv2d_3_nf3_b_ii, training=training)
+
+    # === Fourth path for the 3x3 max-pool layer ===
+    avg_pool2d = self.avg_pool2d(input_tensor)
+    conv2d_1_nf4 = self.conv2d_1_nf4(avg_pool2d)
+    bn_1_nf4 = self.bn_1_nf4(conv2d_1_nf4, training=training)
+
+    # === Concatenation ===
+    concatenation = self.concatenation([bn_1_nf1, 
+                                        bn_3_nf2_b, 
+                                        bn_3_nf3_b_ii, 
+                                        bn_1_nf4])
+
+    return concatenation
+```
 
 One more technique to reduce the number of parameters is to use "Asymmetric convolutions". This technique allows us to continue to factorize a 3x3 convolutional filter into two asymmetric convolutions: one 3x1 filter followed by one 1x3 filter. The asymmetry here means the height and the width of a filter are not equal. The solution will decrease the number of parameters from 18 to 6 (= 3x1 + 1x3). You can look at the figure below to see how the use of the two asymmetric convolutional filters is the same as the use of one 3x3 convolutional filter. Both of the cases outputs a 1x1 unit (Figure 4).
 
@@ -320,7 +399,7 @@ One more technique to reduce the number of parameters is to use "Asymmetric conv
     <em><b>Figure 4:</b> Asymmetric convolutions. </em>
 </p>
 
-Now, let's create a new class for this Inception module and call it ```InceptionModuleWithFactorization```. This class is implemented in the same way as the ```InceptionModule``` with some changes in the two methods ```build``` and ```call```. The information about the modifications will be given in the code comments:
+Now, let's create a new class for this Inception module and call it ```InceptionModuleWithAsymmetricFactorization```. This class is implemented in the same way as the ```InceptionModule``` with some changes in the two methods ```build``` and ```call```. The information about the modifications will be given in the code comments:
 
 ```python
 def build(self, input_shape):
@@ -424,7 +503,7 @@ def build(self, input_shape):
                                                  (1, 1),
                                                  padding='same',
                                                  activation='relu')
-    # **MODIFICATION**: The 3x3 convolutional layer is also split into two asymmetric convolutional layers. However, they do not go in sequence like  in the class `InceptionModuleWithFactorization`, they are two parallel layers.
+    # **MODIFICATION**: The 3x3 convolutional layer is also split into two asymmetric convolutional layers. However, they do not go in sequence like  in the class `InceptionModuleWithAsymmetricFactorization`, they are two parallel layers.
     self.conv2d_3_nf2_b_i = tf.keras.layers.Conv2D(self.n_filters_of_conv_layer_2_b,
                                                    (3, 1),
                                                    padding='same',
@@ -540,26 +619,38 @@ Auxiliary classifiers, as their names show, are used to support the classificati
 
 "Only one auxiliary classifier is used on top of the last 17x17 layer, instead of two auxiliary classifiers in GoogLeNet/Inception-V1. The overall architecture would be shown later." [4]
 
+Below is the code for the class ```AuxiliaryClassifier```. Notice that its first layer is the Average Pooling layer (look at Figure 9):
+
 ```python
 class AuxiliaryClassifier(tf.keras.layers.Layer):
     def __init__(self, **kwargs):
         super(AuxiliaryClassifier, self).__init__(**kwargs)
 
-    def build(self):
-        self.conv2d_5_a = tf.keras.layers.Conv2D(768,
+    def build(self, input_shape):
+        self.average_pooling = tf.keras.layers.AveragePooling2D(pool_size=(5, 5),
+                                                                strides=(3, 3),
+                                                                padding='valid')
+        self.conv2d_5_a = tf.keras.layers.Conv2D(128,
                                                  (5, 5),
                                                  padding='same',
                                                  activation='relu')
-        self.conv2d_5_b = tf.keras.layers.Conv2D(128,
-                                                 (5, 5),
+        self.bn_5_a = tf.keras.layers.BatchNormalization()
+        self.conv2d_5_b = tf.keras.layers.Conv2D(64,
+                                                 (1, 1),
                                                  padding='same',
                                                  activation='relu')
-        self.dense = tf.keras.layers.Dense(1024, activation='relu')
+        self.bn_5_b = tf.keras.layers.BatchNormalization()
+        self.flatten = tf.keras.layers.Flatten(input_shape=(3, 3, 10))
+        self.dense = tf.keras.layers.Dense(3, activation='relu')
 
     def call(self, input_tensor, training=False):
-        conv2d_5_a = self.conv2d_5_a(input_tensor)
-        conv2d_5_b = self.conv2d_5_b(conv2d_5_a)
-        dense = self.dense(conv2d_5_b)
+        average_pooling = self.average_pooling(input_tensor)
+        conv2d_5_a = self.conv2d_5_a(average_pooling)
+        bn_5_a = self.bn_5_a(conv2d_5_a, training=training)
+        conv2d_5_b = self.conv2d_5_b(bn_5_a)
+        bn_5_b = self.bn_5_b(conv2d_5_b, training=training)
+        flatten = self.flatten(bn_5_b)
+        dense = self.dense(flatten)
 
         return dense
 
@@ -650,7 +741,7 @@ class GridSizeReduction(tf.keras.layers.Layer):
 
         # === Second path ===
         conv2d_1_nf2_a = self.conv2d_1_nf2_a(input_tensor)
-        conv2d_3_nf2_b = self.conv2d_1_nf2_b(conv2d_1_nf2_a)
+        conv2d_3_nf2_b = self.conv2d_3_nf2_b(conv2d_1_nf2_a)
 
         # === Third path ===
         max_pool2d = self.max_pool2d(input_tensor)
@@ -679,15 +770,112 @@ class GridSizeReduction(tf.keras.layers.Layer):
 ### Inception-v3 architecture
 
 <p align=center>
-    <img src="images/10_.JPG" width="480" alt>
+    <img src="images/11_.JPG" width="480" alt>
 </p>
 <p align=center>
-    <em><b>Figure 10:</b> Conventional downsizing (Top Left), Efficient Grid Size Reduction (Bottom Left), Detailed Architecture of Efficient Grid Size Reduction (Right) (Image from [4]). </em>
+    <em><b>Figure 11:</b> The Inception-v3 architecture (Image from [4]). </em>
 </p>
 
 We have implemented all the module in the InceptionNet-v3, now we connect all the modules to build the InceptionNet-v3 as described in Figure 10. First, we need to check again the content of the whole network and update to our code:
-- Add Batch Norm:
-- Replace the max pooling with the average pooling in all types of Inception module:
+- Replace the max pooling with the average pooling in all types of Inception module. Modify the ```build``` method and ```call``` method of the class ```InceptionModule```, the class ```InceptionModuleWithAsymmetricFactorization```, and the class ```InceptionModuleForHighDimRepresentations```:
+
+  - In ```build```:
+```python
+# === Fourth path for the 3x3 max-pool layer ===
+self.avg_pool2d = tf.keras.layers.AveragePooling2D((3, 3), 
+                                            strides=(1, 1), 
+                                            padding='same')
+```
+
+  - In ```call```:
+```python
+# === Fourth path for the 3x3 max-pool layer ===
+avg_pool2d = self.avg_pool2d(input_tensor)
+```
+
+- Add Batch Norm after every convolutional layer. Modify the ```build``` method and ```call``` method of the class ```InceptionModule```, the class ```InceptionModuleWithAsymmetricFactorization```, the class ```InceptionModuleForHighDimRepresentations`, the class ```AuxiliaryClassifier```, and the class ```GridSizeReduction```:
+
+  - In ```build```, we just need to define a new Batch Norm layer for each convolutional layer. For example:
+```python
+# === First path for the 1x1 convolutional layer ===
+self.conv2d_1_nf1 = tf.keras.layers.Conv2D(self.n_filters_of_conv_layer_1,
+                                           (1, 1),
+                                           padding='same',
+                                           activation='relu')
+self.bn_1_nf1 = tf.keras.layers.BatchNormalization() # The BatchNorm layer is named after its preceding convolutional layer
+```
+
+  - In ```call```, each path is interleaved with Batch Norm layers. The first convolutional layer still receives the ```input_tensor``` as input, but the following convolutional layers receives the output of the Batch Norm layer as input. The final layer of each path now is a Batch Norm layer. We have to specify the ```training``` argument when calling a Batch Norm layer for it knows whether the training or the evalution/prediction is happening (read more at this [link](https://www.tensorflow.org/api_docs/python/tf/keras/layers/BatchNormalization)):
+```python
+# === Second path for the 3x3 convolutional layer ===
+conv2d_1_nf2_a = self.conv2d_1_nf2_a(input_tensor)
+bn_1_nf2_a = self.bn_1_nf2_a(conv2d_1_nf2_a, training=training)
+conv2d_3_nf2_b = self.conv2d_3_nf2_b(bn_1_nf2_a)
+bn_3_nf2_b = self.bn_3_nf2_b(conv2d_3_nf2_b, training=training)
+
+  - Also remember to change the elements for concatenation in ```call```:
+```python
+
+```
+
+- Add ReLU after every Batch Norm: We have directly specified the ReLU activation by using the keyword argument ```activation``` of the ```tf.keras.layers.Conv2D```. However, now we need to have a Batch Norm layer right after every convolutional layers, then the ReLU is only used after the Batch Norm layer. (This is not necessary?)
+
+Now that we have had all the required modules implemented, we should integrate them to build the whole Inception-V3 network (as in Figure 11).
+
+```python
+class InceptionNet(tf.keras.Model):
+    def __init__(self, num_classes=3):
+        super(InceptionNet, self).__init__()
+        self.inception_module_a_1 = InceptionModule(64, 96, 128, 16, 32, 32)
+        self.inception_module_a_2 = InceptionModule(64, 96, 128, 16, 32, 32)
+        self.inception_module_a_3 = InceptionModule(64, 96, 128, 16, 32, 32)
+        self.grid_size_reduction_1 = GridSizeReduction(32, 32, 32)
+        self.inception_module_b_1 = InceptionModuleWithAsymmetricFactorization(64, 96, 128, 16, 32, 32)
+        self.inception_module_b_2 = InceptionModuleWithAsymmetricFactorization(64, 96, 128, 16, 32, 32)
+        self.inception_module_b_3 = InceptionModuleWithAsymmetricFactorization(64, 96, 128, 16, 32, 32)
+        self.inception_module_b_4 = InceptionModuleWithAsymmetricFactorization(64, 96, 128, 16, 32, 32)
+        self.auxiliary_classifier = AuxiliaryClassifier()
+        self.grid_size_reduction_2 = GridSizeReduction(32, 32, 32)
+        self.inception_module_c_1 = InceptionModuleForHighDimRepresentations(64, 96, 128, 16, 32, 32)
+        self.inception_module_c_2 = InceptionModuleForHighDimRepresentations(64, 96, 128, 16, 32, 32)
+        self.average_pooling = tf.keras.layers.AveragePooling2D(pool_size=(2, 2),
+                                                            strides=None,
+                                                            padding='valid')
+        self.dropout = tf.keras.layers.Dropout(rate=0.2,
+                                               noise_shape=None,
+                                               seed=None)
+        self.flatten = tf.keras.layers.Flatten(input_shape=(3, 3, 10))
+        self.classifier = tf.keras.layers.Dense(num_classes, activation='softmax')
+
+    def call(self, inputs):
+        x = self.inception_module_a_1(inputs)
+        x = self.inception_module_a_2(x)
+        x = self.inception_module_a_3(x)
+        x = self.grid_size_reduction_1(x)
+        x = self.inception_module_b_1(x)
+        x = self.inception_module_b_2(x)
+        x = self.inception_module_b_3(x)
+        x = self.inception_module_b_4(x)
+        out1 = self.auxiliary_classifier(x) 
+        x = self.grid_size_reduction_2(x)
+        x = self.inception_module_c_1(x)
+        x = self.inception_module_c_2(x)
+        x = self.average_pooling(x)
+        x = self.dropout(x)
+        x = self.flatten(x)
+        out2 = self.classifier(x)
+
+        return [out1, out2] # Because we have 2 classifiers, both of them need to be returned
+
+    def model(self):
+        x = tf.keras.layers.Input(shape=(224, 224, 3))
+        return tf.keras.Model(inputs=[x], outputs=self.call(x))
+```
+
+Mention the use of multiple outputs in a network in Tensorflow Keras
+
+Then, try running and we will see that there are 2 train losses, 2 train accuracies and 2 validation accuracies. That is because we have 2 classifiers: one is normally at the top of the network, one is the Auxiliary classifier.
+
 
 ### Label smoothing as regularization
 
