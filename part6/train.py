@@ -109,8 +109,8 @@ model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
 
 hist = model.fit(train_it, validation_data=test_it, epochs=100, callbacks=[tensorboard_callback, model_checkpoint_callback])
 
-print("[*] Best validation accuracy: ", max(hist.history['val_accuracy']))
-print("[*] Best validation loss: ", min(hist.history['val_loss']))
+print("[*] Best validation accuracy: ", max(hist.history['val_output_2_accuracy']))
+print("[*] Best validation loss: ", min(hist.history['val_output_2_loss']))
 
 # test_loss, test_acc = model.evaluate(test_images,  test_labels, verbose=2)
 
