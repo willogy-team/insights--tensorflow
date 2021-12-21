@@ -47,9 +47,9 @@ datagen = ImageDataGenerator(
     horizontal_flip=True,
 )
 
-train_it = datagen.flow_from_directory(args["train_dir"], target_size=(224, 224), class_mode="categorical", batch_size=8)
+train_it = datagen.flow_from_directory(args["train_dir"], target_size=(299, 299), class_mode="categorical", batch_size=8)
 
-test_it = datagen.flow_from_directory(args["test_dir"], target_size=(224, 224), class_mode="categorical", batch_size=8)
+test_it = datagen.flow_from_directory(args["test_dir"], target_size=(299, 299), class_mode="categorical", batch_size=8)
 
 # confirm the iterator works
 batchX, batchy = train_it.next()
@@ -67,7 +67,7 @@ print('[*] Batch shape=%s, min=%.3f, max=%.3f' % (batchy.shape, batchy.min(), ba
 
 model = InceptionNet(num_classes=3)
 
-input_shape = (None, 224, 224, 3)
+input_shape = (None, 299, 299, 3)
 model.build(input_shape)
 model.model().summary()
 
