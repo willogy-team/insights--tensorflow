@@ -980,6 +980,11 @@ We should verify whether the network architecture has been correctly implemented
 The validation result after training 100 epochs is:
 
 ```sh
+37/38 [============================>.] - ETA: 0s - loss: 2.6869 - output_1_loss: 1.4768 - o
+38/38 [==============================] - ETA: 0s - loss: 2.6874 - output_1_loss: 1.4650 - output_2_loss: 1.2225 - output_1_accuracy: 0.3267 - output_2_accuracy: 0.5800
+38/38 [==============================] - 6s 170ms/step - loss: 2.6874 - output_1_loss: 1.4650 - output_2_loss: 1.2225 - output_1_accuracy: 0.3267 - output_2_accuracy: 0.5800 - val_loss: 3.2309 - val_output_1_loss: 1.2568 - val_output_2_loss: 1.9740 - val_output_1_accuracy: 0.4000 - val_output_2_accuracy: 0.5556
+[*] Best validation accuracy:  0.6222222447395325
+[*] Best validation loss:  1.1209843158721924
 ```
 
 ## Conclusion
