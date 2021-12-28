@@ -1,4 +1,4 @@
-# Tensorflow insights - part 4: Custom model
+# Tensorflow insights - part 4: Custom model - VGG
 
 Until now, our network just has 3 convolutional layers and 2 dense layers. When training with epochs=50, batch size=1, learning rate=1e-4 on the Stanford Dogs dataset, the validation accuracy is 61.1% and the validation loss is 0.928. The number of parameters is:
 

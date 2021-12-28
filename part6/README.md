@@ -1,14 +1,35 @@
 # Tensorflow insights - part 6: Custom model - Inception V3
 
-The VGG block boils down to only a sub networks that contains a sequence of convolutional layers and a max-pooling layer. Each layer is just connected right after another layer in a consecutive manner, which is exactly in the same way as all the networks that we used before part 4. For that reason, you might not have gained the full advantage of using Tensorflow custom layer/model. In this post, we will get familiar with the idea of parallel paths and implement the Inception module which is used by the variants of the Inception network. To be practical, we will then show you how to implement the Inception-v3 network architecture. Throughout this post, you will see a lot more of the power of using Tensorflow custom layer/model.
+The VGG block boils down to only a sub-network that contains a sequence of convolutional layers and a max-pooling layer. Each layer is just connected right after another layer in a consecutive manner, which is exactly in the same way as all the networks that we used before part 4. For that reason, you might not have gained the full advantage of using the Tensorflow custom layer/model. In this post, we will get familiar with the idea of parallel paths and implement the Inception module which is used by the variants of the Inception network. To be practical, we will then show you how to implement the Inception-v3 network architecture. Throughout this post, you will see a lot more of the power of the Tensorflow custom layer/model.
 
-## Inception module [1][2][3]
+## Table of contents
 
-The Inception module is a block of parallel paths each of which contains some convolutional layers or pooling layer. The output of the module is made from the combination (more correctly, concatenation) of all the outputs of these paths. You can think of the Inception module as a complex high-level layer that is created from many simpler ones (convolution, pooling). According to the original paper [1][2][4], the Inception module will help us to create a deeper networks (many layers) but still keep the computation efficiency.
+1. [Inception-module](#inception-module)
+2. [Implement-the-simple-version-of-the-Inception-module-(class-```InceptionModule```)](#implement-the-simple-version-of-the-inception-module-(class-```inceptionmodule```))
+3. [First-running](#first-running)
+4. [Implement-a-more-complete-version-of-the-Inception-module-(update-to-the-class-```InceptionModule```)](#implement-a-more-complete-version-of-the-inception-module-(update-to-the-class-```inceptionmodule```))
+5. [Implement-a-custom-Inception-model](#implement-a-custom-inception-model)
+6. [Inception-v3](inception---v3)
+    1. [Factorizing-convolutions](#factorizing-convolutions)
+    2. [Asymmetric-convolution](#asymmetric-convolution)
+    3. [Inception-module-for-high-dimensional-representations](#inception-module-for-high-dimensional-representations)
+    4. [Auxiliary-classifiers](#auxiliary-classifiers)
+    5. [Efficient-grid-size-reduction](#efficient-grid-size-reduction)
+    6. [Inception-v3-architecture](#inception---v3-architecture)
+7. [Running the codes](#running-the-codes)
+8. [Conclusion](#conclusion)
+9. [References](#references)
+
+
+## Inception module
+
+(References: [1, 2, 3])
+
+The Inception module is a block of parallel paths each of which contains some convolutional layers or a pooling layer. The output of the module is made from the combination (more correctly, concatenation) of all the outputs of these paths. You can think of the Inception module as a complex high-level layer that is created from many simpler ones (convolution, pooling). According to the original paper [1][2][4], the Inception module will help us to create a deeper network (many layers) but still keep the computation efficiency.
 
 The convolutional layers inside the Inception module use a kernel size of 1x1, 3x3, 5x5 or 7x7.
 
-As being pointed out in the paper "Rethinking the Inception Architecture for Computer Vision" [3], "This is a very simple and powerful architectural unit that allows the model to learn not only parallel filters of the same size, but parallel filters of differing sizes, allowing learning at multiple scale".
+As being pointed out in the paper "Rethinking the Inception Architecture for Computer Vision" [3], "This is a very simple and powerful architectural unit that allows the model to learn not only parallel filters of the same size, but parallel filters of differing sizes, allowing learning at multiple scales".
 
 ## Implement the simple version of the Inception module (class ```InceptionModule```)
 
@@ -22,7 +43,7 @@ We start the implementation by using the ```tf.keras.layers.Layer``` base model.
 class InceptionModule(tf.keras.layers.Layer):
 ```
 
-Then as usual, need to define 4 methods:
+Then, as usual, need to define 4 methods:
 - ```__init__```
 - ```build```
 - ```call```
@@ -42,7 +63,7 @@ The attributes ```nf1```, ```nf2``` and ```nf3``` are the numbers of filters, ea
 
 ### ```build```
 
-Inside this method, we define the module architecture. There are 4 paths, each path has only 1 layer. In particular, there are 3 convolutional layers and 1 max pooling layer.
+Inside this method, we define the module architecture. There are 4 paths, each path has only 1 layer. In particular, there are 3 convolutional layers and 1 max-pooling layer.
 
 ```python
 def build(self, input_shape):
@@ -66,11 +87,11 @@ def build(self, input_shape):
 
 The padding "same" is very important here so that all the paths have the same output height and width (224x224). As a result, they can be concatenated into the final output of the module.
 
-The convolutional layers of different kernel size (1x1, 3x3 and 5x5) will guarantee the multiscale property of the Inception network.
+The convolutional layers of different kernel sizes (1x1, 3x3, and 5x5) will guarantee the multiscale property of the Inception network.
 
 ### ```call```
 
-The 3 convolutional layers and the max pooling layer are executed in a parallel way. They all receive input from the previous layer. You should notice that the max pooling also receives the input from the previous layer (which is stored in ```input_tensor```). And then, their output are concatenated to create the final output of the module. We pass a list of outputs to the layer ```self.concatenation``` and everything will be automatically done.
+The 3 convolutional layers and the max-pooling layer are executed in a parallel way. They all receive input from the previous layer. You should notice that the max-pooling also receives the input from the previous layer (which is stored in ```input_tensor```). And then, their outputs are concatenated to create the final output of the module. We pass a list of outputs to the layer ```self.concatenation``` and everything will be automatically done.
 
 ```python
 def call(self, input_tensor, training=False):
@@ -83,7 +104,7 @@ def call(self, input_tensor, training=False):
     return concatenation
 ```
 
-<ins> **Note:** </ins> Because all the paths'outputs have the same width and height and are different only in the number of filters, they can be concatenated across the axis that represents the number of filters. The final module output will also have the same width and height, but with an increase in the number of filters.
+<ins> **Note:** </ins> Because all the path outputs have the same width and height and are different only in the number of filters, they can be concatenated across the axis that represents the number of filters. The final module output will also have the same width and height, but with an increase in the number of filters.
 
 ### ```get_config```
 
@@ -123,7 +144,7 @@ model.model().summary()
 ```
 
 <p align=center>
-    <img src="images/1_model_summary.JPG" width="520" alt>
+    <img src="images/tensorflow_insights_part6_1_model_summary.JPG" width="520" alt>
 </p>
 <p align=center>
     <em><b>Figure 1:</b> The result of "summary()". </em>
@@ -134,17 +155,17 @@ tf.keras.utils.plot_model(model.model(), to_file="".join([image_path, "/model.pn
 ```
 
 <p align=center>
-    <img src="images/2_plot_model.png" width="640" alt>
+    <img src="images/tensorflow_insights_part6_2_plot_model.png" width="640" alt>
 </p>
 <p align=center>
     <em><b>Figure 2:</b> The output image of ```plot_model()```. </em>
 </p>
 
-Yes! The plot really shows the true parallel architecture of the Inception module. When implementing module like this, it is better to use the ```plot_model()``` for debugging.
+Yes! The plot really shows the true parallel architecture of the Inception module. When implementing a module like this, it is better to use the ```plot_model()``` for debugging.
 
-Above, we have just implemented a simple version of the Inception module. There are more things need to be done for the improvement in the computation efficiency.
+Above, we have just implemented a simple version of the Inception module. There are more things that need to be done for the improvement in computational efficiency.
 
-One of them is the inclusion of a 1x1 convolutional layer at the first place of each path. As you may have known, the 1x1 convolutional layer is usually utilized to decrease the number of channels (or filters) in the given input without any change to the width and the height. This update will enhance the efficiency of the Inception module. Instead of putting the whole output (all the channels) of the previous layer into, for example, the 5x5 layer we just need to put a more compact tensor with less channels into the layer. Also, the 1x1 convolutional layer is not as highly computational as the 5x5 computational layer, so give it the responsibility to receive the full-channel output of the last layer is therefore more efficient.
+One of them is the inclusion of a 1x1 convolutional layer at the first place of each path. As you may have known, the 1x1 convolutional layer is usually utilized to decrease the number of channels (or filters) in the given input without any change to the width and the height. This update will enhance the efficiency of the Inception module. Instead of putting the whole output (all the channels) of the previous layer into, for example, the 5x5 layer we just need to put a more compact tensor with fewer channels into the layer. Also, the 1x1 convolutional layer is not as highly computational as the 5x5 computational layer, so giving it the responsibility to receive the full-channel output of the last layer is, therefore, more efficient.
 
 For the case of the path having one pooling layer, the 1x1 convolutional layer helps to increase the number of filters.
 
@@ -171,9 +192,9 @@ def __init__(self, nf1, nf2_a, nf2_b, nf3_a, nf3_b, nf4, **kwargs):
 
 ### ```build```
 
-You can see the Inception module as the collection of paths. Each path contains several layers in sequence and all the paths are executed in parallel. In the method ```build```, we will define the layers of each path. The first three paths all have a 1x1 convolution as their first layer. The second path and the third path have a layer with larger filter size which follows their first layers (3x3 and 5x5 respectively).
+You can see the Inception module as the collection of paths. Each path contains several layers in sequence and all the paths are executed in parallel. In the method ```build```, we will define the layers of each path. The first three paths all have a 1x1 convolution as their first layer. The second path and the third path have a layer with a larger filter size that follows their first layers (3x3 and 5x5 respectively).
 
-As mentioned above, we set the ```padding``` of all layer to ```'same'``` so the outputs of all the paths can then be concatenated.
+As mentioned above, we set the ```padding``` of all layers to ```'same'``` so the outputs of all the paths can then be concatenated.
 
 ```python
 def build(self, input_shape):
@@ -214,7 +235,7 @@ def build(self, input_shape):
 
 ### ```call```
 
-In ```call```, we define the forward step of the Inception module. All the paths receive the ```input_tensor``` as their inputs. The ```input_tensor``` is actually the output tensor of the previous layer/module. In each path, one layer is called after another and receives the output of the previous layer as input. Finally, the final output of each path is concatenated in to the final output of the module.
+In ```call```, we define the forward step of the Inception module. All the paths receive the ```input_tensor``` as their inputs. The ```input_tensor``` is actually the output tensor of the previous layer/module. In each path, one layer is called after another and receives the output of the previous layer as input. Finally, the final output of each path is concatenated into the final output of the module.
 
 ```python
 def call(self, input_tensor, training=False):
@@ -263,7 +284,7 @@ def get_config(self):
 Above, we have implemented the original Inception module:
 
 <p align=center>
-    <img src="images/3_original_inception_module.JPG" width="480" alt>
+    <img src="images/tensorflow_insights_part6_3_original_inception_module.JPG" width="480" alt>
 </p>
 <p align=center>
     <em><b>Figure 3:</b> The original Inception module (Image from [2]). </em>
@@ -271,9 +292,9 @@ Above, we have implemented the original Inception module:
 
 ## Implement a custom Inception model
 
-Let's implement a custom Inception network which is composed of several Inception modules.
+Let's implement a custom Inception network that is composed of several Inception modules.
 
-We have 2 inception modules followed by a flatten layer and 4 dense layers. The configuration of the numbers of filters in the 2 Inception modules are arbitrarily set and not based on the original papers [1][2].
+We have 2 inception modules followed by a flatten layer and 4 dense layers. The configurations of the numbers of filters in the 2 Inception modules are arbitrarily set and not based on the original papers [1][2].
 
 Below is the code we add to the file ```/networks/inceptionv3.py```. The class ```InceptionNet``` subclasses the base class ```tf.keras.layers.Model``` to create a custom model/network.
 
@@ -343,7 +364,7 @@ Factorizing convolutions is the core idea of Inception-v3 for the reduction in t
 In the current version of ```InceptionModule```, there is one path that uses a 5x5 convolutional filter. Therefore, the number of parameters for that filter is 25 (= 5x5). To reduce that number, [2] factorizes it into two smaller convolutions (two 3x3 convolutions). The solution will decrease the number of parameters from 25 to 18 (= 3x3 + 3x3, as there are 2 3x3 convolutional filters). You can look at the figure below to see how the use of the two 3x3 convolutional filters is the same as the use of one 5x5 convolutional filter. Both of the cases outputs a 1x1 unit (Figure 3).
 
 <p align=center>
-    <img src="images/4_factorizing_convolutions.JPG" width="240" alt>
+    <img src="images/tensorflow_insights_part6_4_factorizing_convolutions.JPG" width="240" alt>
 </p>
 <p align=center>
     <em><b>Figure 4:</b> Factorization into smaller convolutions. </em>
@@ -433,18 +454,18 @@ def call(self, input_tensor, training=False):
 
 All the ```padding```s are set to ```'same'``` and all the ```activation```s are set to ```'relu'```.
 
-From now, the Inception module uses the average pooling layer in place of the max pooling layer.
+From now, the Inception module uses the average pooling layer in place of the max-pooling layer.
 
 The concatenation receives the list of outputs from the Batch Norm layers.
 
 <ins> **Note:** </ins> The batch normalization layer has also been added after every convolutional layer. The default setting of the Tensorflow Batch Normalization layer is used.
 
-In total, we have three types of Inception module. This is the first one. **Let's call this Inception module as type A.**
+In total, we have three types of Inception modules. This is the first one. **Let's call this Inception module as type A.**
 
 Above, we have implemented the type-A Inception module:
 
 <p align=center>
-    <img src="images/5_type_a_inception_module.JPG" width="480" alt>
+    <img src="images/tensorflow_insights_part6_5_type_a_inception_module.JPG" width="480" alt>
 </p>
 <p align=center>
     <em><b>Figure 5:</b> The type-A Inception module (Image from [2]). </em>
@@ -455,7 +476,7 @@ Above, we have implemented the type-A Inception module:
 One more technique to reduce the number of parameters is to use "Asymmetric convolution". This technique allows us to continue to factorize a 3x3 convolutional filter into two asymmetric convolutions: one 3x1 filter followed by one 1x3 filter. The asymmetry here means the height and the width of a filter are not equal. The solution will decrease the number of parameters from 9 (= 3x3) to 6 (= 3x1 + 1x3). You can look at the figure below to see how the use of the two asymmetric convolutional filters is the same as the use of one 3x3 convolutional filter. Both of the cases outputs a 1x1 unit (Figure 4 below).
 
 <p align=center>
-    <img src="images/6_asymmetric_convolutions.JPG" width="240" alt>
+    <img src="images/tensorflow_insights_part6_6_asymmetric_convolutions.JPG" width="240" alt>
 </p>
 <p align=center>
     <em><b>Figure 6:</b> Asymmetric convolutions. </em>
@@ -568,14 +589,14 @@ def call(self, input_tensor, training=False):
     return concatenation
 ```
 
-You can see that the number of layers in the second path and the third path has increased. Though there is an increase in the number of layers, the Asymmetric convolution really help us to gain more computational efficiency.
+You can see that the number of layers in the second path and the third path has increased. Though there is an increase in the number of layers, the Asymmetric convolution really helps us to gain more computational efficiency.
 
 **This is the second type of Inception module. Let's call this Inception module as type B.**
 
 Above, we have implemented the type-B Inception module:
 
 <p align=center>
-    <img src="images/7_type_b_inception_module.JPG" width="480" alt>
+    <img src="images/tensorflow_insights_part6_7_type_b_inception_module.JPG" width="480" alt>
 </p>
 <p align=center>
     <em><b>Figure 7:</b> The type-B Inception module (Image from [2]). </em>
@@ -583,7 +604,7 @@ Above, we have implemented the type-B Inception module:
 
 ### Inception module for high dimensional representations
 
-There is another type of Inception module proposed by the authors of [2] to promote high dimensional representations for the coarsest grid (you should read more about this in the paper [2]). Each of the 3x3 (or 5x5) convolutional layers is still split into several smaller convolutional layers like the two version above, but at this time the smaller convolutional layers **come in parallel (not in sequence)**.
+There is another type of Inception module proposed by the authors of [2] to promote high dimensional representations for the coarsest grid (you should read more about this in the paper [2]). Each of the 3x3 (or 5x5) convolutional layers is still split into several smaller convolutional layers like the two versions above, but at this time the smaller convolutional layers **come in parallel (not in sequence)**.
 
 Let's create another class for this Inception module and call it ```InceptionModuleForHighDimRepresentations```. This class is implemented in the same way as the ```InceptionModule``` with some changes in the two methods ```build``` and ```call```:
 
@@ -683,12 +704,12 @@ def call(self, input_tensor, training=False):
     return concatenation
 ```
 
-**This is the second type of Inception module. Let's call this Inception module as type C.**
+**This is the second type of Inception module. Let's call this Inception module type C.**
 
 Above, we have implemented the type-C Inception module:
 
 <p align=center>
-    <img src="images/8_type_c_inception_module.JPG" width="480" alt>
+    <img src="images/tensorflow_insights_part6_8_type_c_inception_module.JPG" width="480" alt>
 </p>
 <p align=center>
     <em><b>Figure 8:</b> The type-C Inception module (Image from [2]). </em>
@@ -696,20 +717,20 @@ Above, we have implemented the type-C Inception module:
 
 So far, we have mentioned four types of the Inception module.
 
-By using factorization, the number of weights/parameters has decreased a lot. Consequently, not only the network can have more layers (more deep), but it is also more unlikely to be overfitting [4].
+By using factorization, the number of weights/parameters has decreased a lot. Consequently, not only the network can have more layers (deeper), but it is also more unlikely to be overfitting [4].
 
 ### Auxiliary classifiers
 
-Auxiliary classifiers were first used to improve the convergence of very deep networks, but according to [2] they support the training stage by serving as a regularizer (for more information, you should read the paper [2]). For the current case, the classification stage happens only at the top of a network (the last layers of the network). With auxiliary classifier, now the network has two heads for classification. Because of that, training and evaluation will have two losses and two accuracies.
+Auxiliary classifiers were first used to improve the convergence of very deep networks, but according to [2] they support the training stage by serving as a regularizer (for more information, you should read the paper [2]). For the current case, the classification stage happens only at the top of a network (the last layers of the network). With the auxiliary classifier, now the network has two heads for classification. Because of that, training and evaluation will have two losses and two accuracies.
 
 <p align=center>
-    <img src="images/9_auxiliary_classifier.JPG" width="480" alt>
+    <img src="images/tensorflow_insights_part6_9_auxiliary_classifier.JPG" width="480" alt>
 </p>
 <p align=center>
     <em><b>Figure 9:</b> Auxiliary classifier (Image from [4]). </em>
 </p>
 
-Below is the code for the class ```AuxiliaryClassifier```. Notice that its first layer is the Average Pooling layer (look at Figure 9). Also notice that the last convolutional layer acts as a dense layer, so we specify the number of filters to a value that is equal to the number of categories in the used dataset:
+Below is the code for the class ```AuxiliaryClassifier```. Notice that its first layer is the Average Pooling layer (look at Figure 9). Also, notice that the last convolutional layer acts as a dense layer, so we specify the number of filters to a value that is equal to the number of categories in the used dataset:
 
 ```python
 class AuxiliaryClassifier(tf.keras.layers.Layer):
@@ -752,26 +773,26 @@ class AuxiliaryClassifier(tf.keras.layers.Layer):
         return config
 ```
 
-It is not much to say about the implementation of the class ```AuxiliaryClassifier```. It is just a small module containing one average pooling layer and three convolutional layers (The batch normalization is also used). The important thing is how to integrate the module into the final network architecture. The integration will be showed below.
+It is not much to say about the implementation of the class ```AuxiliaryClassifier```. It is just a small module containing one average pooling layer and three convolutional layers (batch normalization is also used). The important thing is how to integrate the module into the final network architecture. The integration will be shown below.
 
 ### Efficient grid size reduction
 
 This part is to talk about the grid size reduction.
 
 <p align=center>
-    <img src="images/10_grid_size_reduction.JPG" width="480" alt>
+    <img src="images/tensorflow_insights_part6_10_grid_size_reduction.JPG" width="480" alt>
 </p>
 <p align=center>
     <em><b>Figure 10:</b> Conventional downsizing (Top Left), Efficient Grid Size Reduction (Bottom Left), Detailed Architecture of Efficient Grid Size Reduction (Right) (Image from [4])(notice that the architecture needs to be read from the bottom-up). </em>
 </p>
 
-The max pooling is usually used to decrease the size of a feature map for efficiency. However, there are two main problems with it [4]:
-- "A max pooling layer followed by a convolutional layer is too greedy": Look at the picture in [4] (top left), we first do the pooling on the input and only get what we need and get rid of all the others by decreasing the number of channels.
-- "A convolutional layer followed by a max pooling is too expensive": Look at the picture in [4] (top left), we use all the information from the input to feed into the convolutional layer => This is very expensive.
+The max-pooling is usually used to decrease the size of a feature map for efficiency. However, there are two main problems with it [4]:
+- "A max-pooling layer followed by a convolutional layer is too greedy": Look at Figure 10 (top left), we first do the pooling on the input and only get what we need and get rid of all the others by decreasing the number of channels.
+- "A convolutional layer followed by a max-pooling is too expensive": Look at Figure 10 (top left), we use all the information from the input to feed into the convolutional layer, which is very expensive.
 
 The two mentioned problems above are the main reasons leading to the proposition of the Efficient Grid Size Reduction in Inceptionnet-v3.
 
-In the bottom left of the picture in [4], the primitive version of the Efficient Grid Size Reduction module is drawn. Having the two separated paths like this tackles both the problems above. The input information is not lost and the convolutional operation is not too expensive (as the number of filters is decreased by half). More importantly, the output shape is kept (17x17x640) by concatening the outputs of the two paths. It has the best of both worlds. This primitive module is then expanded into the detailed Efficient Grid Size Reduction module with 3 paths (the right of picture in [4]).
+In the bottom left of Figure 10, the primitive version of the Efficient Grid Size Reduction module is drawn. Having the two separated paths like this tackles both the problems above. The input information is not lost and the convolutional operation is not too expensive (as the number of filters is decreased by half). More importantly, the output shape is kept (17x17x640) by concatenating the outputs of the two paths. It has the best of both worlds. This primitive module is then expanded into the detailed Efficient Grid Size Reduction module with 3 paths (the right of Figure 10).
 
 The implementation of Efficient Grid Size Reduction is below (we get references from [4]):
 
@@ -864,15 +885,15 @@ class GridSizeReduction(tf.keras.layers.Layer):
 Now that we have completed all the required modules, let's build the Inception-v3 network architecture.
 
 <p align=center>
-    <img src="images/11_inception_v3.JPG" width="480" alt>
+    <img src="images/tensorflow_insights_part6_11_inception_v3.JPG" width="480" alt>
 </p>
 <p align=center>
     <em><b>Figure 11:</b> The Inception-v3 architecture (Image from [4]). </em>
 </p>
 
-In case you do not notice, there are some convolutional layers and max pooling layers coming before the Inception modules. If we think each Inception module as one layer, the Inception-v3 network will have 18 layers: 7 primitive layers (convolution and max pooling) + 11 Inception layers (or Inception modules). Here, we only consider the layers for feature extraction, not the layers for classification (the top layers). We also do not consider the Auxiliary classifier module.
+In case you do not notice, there are some convolutional layers and max-pooling layers coming before the Inception modules. If we think of each Inception module as one layer, the Inception-v3 network will have 18 layers: 7 primitive layers (convolution and max-pooling) + 11 Inception layers (or Inception modules). Here, we only consider the layers for feature extraction, not the layers for classification (the top layers). We also do not consider the Auxiliary classifier module.
 
-We have implemented all the module in the InceptionNet-v3, now we connect all the modules to build the InceptionNet-v3 as described in Figure 10. 
+We have implemented all the modules in the InceptionNet-v3, now we connect all the modules to build the InceptionNet-v3 as described in Figure 10. 
 
 The code for the Inception-V3 network is below. Everything is implemented in the same architecture specified in Figure 11:
 
@@ -962,16 +983,16 @@ class InceptionNet(tf.keras.Model):
 
 The number of filters, kernel size, strides, and other settings of each layer have already been set according to the paper [2] and the code [5].
 
-In ```call```, we return the list of two outputs as their are two classifier: the original one at the top and the auxiliary one.
+In ```call```, we return the list of two outputs as there are two classifiers: the original one at the top and the auxiliary one.
 
-Then, try running and we will see that there are 2 train losses, 2 train accuracies and 2 validation accuracies. That is because we have 2 classifiers.
+Then, try running and we will see that there are 2 train losses, 2 train accuracies, and 2 validation accuracies. That is because we have 2 classifiers.
 
 In ```train.py```, set the image_size from 224 to 299. This is the default image size used by [2] and [5].
 
 We should verify whether the network architecture has been correctly implemented. One way to do this is to compare the output new "plot_model.png" with Figure 11.
 
 <p align=center>
-    <img src="images/12_new_plot_model.png" width="480" alt>
+    <img src="images/tensorflow_insights_part6_12_new_plot_model.png" width="480" alt>
 </p>
 <p align=center>
     <em><b>Figure 12:</b> The plot image of the Inception-v3 architecture. </em>
@@ -986,6 +1007,63 @@ The validation result after training 100 epochs is:
 [*] Best validation accuracy:  0.6222222447395325
 [*] Best validation loss:  1.1209843158721924
 ```
+
+## Running the codes
+
+It is recommended that you read all the contents of this README before running the code.
+
+- Step 0: Install required packages in your virtual environment:
+
+```sh
+pip install -r requirements
+```
+
+- Step 1: In the file ```train.sh``` is the command that is used for training. The command is like below. You need to change its arguments:
+
+  - ```-trd```: the absolute path to the created train folder which is set in part 1 of this series.
+  - ```-td```: the absolute path to the created test folder of "Step 2" which is set in part 1 of this series.
+  - ```-mpd```: the path to the folder for saving checkpoints.
+  - ```-imp```: the path to the folder for saving the image of the model plot.
+
+```sh
+python train.py \
+-trd "/media/data-huy/dataset/StanfordDogs/train_val_test/train" \
+-td "/media/data-huy/dataset/StanfordDogs/train_val_test/test" \
+-mdp "./models" \
+-imp "./images"
+```
+
+- Step 2: Train the neural network on the Stanford Dogs dataset:
+
+```sh
+chmod +x train.sh
+./train.sh
+```
+
+- Step 3: View Tensorboard
+
+```sh
+tensorboard --logdir="./logs"
+```
+
+- Step 4: For loading the trained model and do some visualizations, the ```test.py``` is used. We also have a script file ```test.sh``` for storing the command that runs ```test.py```. You need to change its arguments:
+  - ```-trd```: the absolute path to the created train folder which is set in the part 1 of this series. We will use images in the train set for visualizations.
+  - ```-mpd```: the path to the folder that stores saving checkpoints. We will load the trained model from this folder.
+
+```sh
+python test.py \
+-trd "/media/data-huy/dataset/StanfordDogs/train_val_test/train" \
+-mdp "./models" \
+```
+
+- Step 5: Test the trained model by visualizations.
+
+```sh
+chmod +x test.sh
+./test.sh
+```
+
+The visualization figures will be displayed one after another. To go to the next figure, click the "close" button of the current figure.
 
 ## Conclusion
 

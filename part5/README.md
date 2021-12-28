@@ -1,4 +1,4 @@
-# Tensorflow insights - part 5: Custom model - continue
+# Tensorflow insights - part 5: Custom model - VGG - continue
 
 In the last part, we have shown how to use the custom model to implement the VGG network. However, one problem that remained is we cannot use model.summary() to see the output shape of each layer. In addition, we also cannot get the shape of filters. Although we know how the VGG is constructed, overcoming this problem will help the end-users - who only use our checkpoint files to investigate the model. In particular, it is very important for us to get the output shape of each layer/block when using the file ```test.py```.
 
